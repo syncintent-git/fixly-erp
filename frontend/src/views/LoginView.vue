@@ -89,34 +89,6 @@
                 {{ authStore.isLoading ? 'Verifying with Google...' : 'Continue with Google' }}
               </span>
             </button>
-
-            <!-- Optional Manual Email Simulator -->
-            <div v-if="showManualGoogleInput" class="p-3 bg-zinc-950 rounded-lg border border-zinc-800 space-y-2">
-              <label class="block text-[10px] font-bold text-zinc-400 uppercase">Test Google Email Sign-In</label>
-              <div class="flex gap-2">
-                <input 
-                  type="email" 
-                  v-model="customGoogleEmail" 
-                  placeholder="e.g. yourname@gmail.com" 
-                  class="flex-1 bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white outline-none focus:border-orange-500 font-mono"
-                />
-                <button 
-                  @click="handleCustomGoogleAuth" 
-                  class="bg-orange-500 hover:bg-orange-400 text-black text-xs font-bold px-3 py-1.5 rounded cursor-pointer transition-colors">
-                  Sign In
-                </button>
-              </div>
-            </div>
-
-            <div class="text-center pt-0.5">
-              <button 
-                type="button"
-                @click="showManualGoogleInput = !showManualGoogleInput" 
-                class="text-[11px] text-zinc-400 hover:text-orange-400 transition-colors inline-flex items-center gap-1.5 cursor-pointer font-medium">
-                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                <span>{{ showManualGoogleInput ? 'Hide test email input' : 'Or test with custom Google email address' }}</span>
-              </button>
-            </div>
           </div>
 
           <!-- Divider -->
@@ -283,6 +255,7 @@ import { getApiBase } from '@/config'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { supabase } from '@/supabase'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -323,24 +296,9 @@ const redirectUser = () => {
 }
 
 const triggerGoogleSignInPrompt = async () => {
-  // Show the manual email input so the user can enter their Google email
-  showManualGoogleInput.value = true
+  await authStore.initiateGoogleLogin()
 }
 
-const handleCustomGoogleAuth = async () => {
-  if (!customGoogleEmail.value.trim()) return
-  const result = await authStore.loginWithGoogle({
-    email: customGoogleEmail.value.trim(),
-    name: customGoogleEmail.value.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
-  })
-  if (result?.status === 'SUCCESS') {
-    redirectUser()
-  } else if (result?.status === 'ONBOARDING_REQUIRED') {
-    showOnboardModal.value = true
-  } else if (result?.status === 'PENDING_APPROVAL') {
-    pendingApprovalUser.value = result.data.user
-  }
-}
 
 const submitOnboarding = async () => {
   const result = await authStore.onboardRole(
@@ -393,9 +351,23 @@ const handleAdminLogin = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (authStore.user && !authStore.isPendingApproval) {
     redirectUser()
+    return
+  }
+  
+  // Check for Supabase session after redirect
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    const result = await authStore.processSupabaseSession(session)
+    if (result?.status === 'SUCCESS') {
+      redirectUser()
+    } else if (result?.status === 'ONBOARDING_REQUIRED') {
+      showOnboardModal.value = true
+    } else if (result?.status === 'PENDING_APPROVAL') {
+      pendingApprovalUser.value = result.data.user
+    }
   }
 })
 </script>

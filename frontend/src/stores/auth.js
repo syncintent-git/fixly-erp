@@ -1,6 +1,7 @@
 import { getApiBase } from '@/config'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { supabase } from '@/supabase'
 
 
 export const useAuthStore = defineStore('auth', () => {
@@ -56,14 +57,35 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 1. Google OAuth Sign-In
-  async function loginWithGoogle(payload) {
+  async function initiateGoogleLogin() {
     isLoading.value = true
     authError.value = ''
     try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/login'
+        }
+      })
+      if (error) throw error
+    } catch (err) {
+      authError.value = 'Unable to initiate Google sign-in.'
+      isLoading.value = false
+    }
+  }
+
+  async function processSupabaseSession(session) {
+    isLoading.value = true
+    authError.value = ''
+    try {
+      // Send the Supabase access token to our Python backend
       const res = await fetch(`${getApiBase()}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ 
+          credential: session.access_token,
+          email: session.user?.email
+        })
       })
       const data = await res.json()
 
@@ -219,7 +241,8 @@ export const useAuthStore = defineStore('auth', () => {
     canManageScrum,
     isIntern,
     isPendingApproval,
-    loginWithGoogle,
+    initiateGoogleLogin,
+    processSupabaseSession,
     onboardRole,
     demoLogin,
     login,

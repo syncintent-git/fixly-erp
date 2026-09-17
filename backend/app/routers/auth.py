@@ -1,13 +1,21 @@
 import time
 import jwt
+import os
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from supabase import create_client, Client
 from ..database import get_db
 from .. import models, schemas
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication & Google OAuth"])
 
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase: Optional[Client] = None
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 def get_user_permissions(user: models.User):
@@ -21,24 +29,33 @@ def get_user_permissions(user: models.User):
 
 @router.post("/google")
 def google_auth(payload: schemas.GoogleAuthRequest, db: Session = Depends(get_db)):
-    """Authenticates a user via Google GIS credential or email payload."""
+    """Authenticates a user via Supabase Access Token."""
     email = payload.email
     name = payload.name
     avatar_url = payload.avatarUrl
 
-    # If a JWT ID credential was sent, decode the payload
-    if payload.credential and not email:
+    if payload.credential:
+        # Supabase access_token provided
+        if not supabase:
+            raise HTTPException(status_code=500, detail="Supabase client not configured on server.")
+        
         try:
-            # Unverified decode for extracting profile claims
-            decoded = jwt.decode(payload.credential, options={"verify_signature": False})
-            email = decoded.get("email")
-            name = name or decoded.get("name")
-            avatar_url = avatar_url or decoded.get("picture")
+            # Verify token with Supabase Auth
+            user_response = supabase.auth.get_user(payload.credential)
+            if not user_response or not user_response.user:
+                raise HTTPException(status_code=401, detail="Invalid or expired Supabase token.")
+            
+            sb_user = user_response.user
+            email = sb_user.email
+            # Extract metadata if available
+            metadata = sb_user.user_metadata or {}
+            name = name or metadata.get("full_name") or metadata.get("name")
+            avatar_url = avatar_url or metadata.get("avatar_url") or metadata.get("picture")
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid Google credential: {e}")
+            raise HTTPException(status_code=400, detail=f"Invalid Supabase credential: {e}")
 
     if not email:
-        raise HTTPException(status_code=400, detail="Google authentication did not provide an email address.")
+        raise HTTPException(status_code=400, detail="Authentication did not provide an email address.")
 
     clean_email = email.strip().lower()
 
