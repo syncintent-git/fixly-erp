@@ -8,15 +8,18 @@ from .. import models, schemas
 
 router = APIRouter(prefix="/api/holidays", tags=["Holidays"])
 
+@router.get("", response_model=List[schemas.HolidayResponse])
 @router.get("/", response_model=List[schemas.HolidayResponse])
+@router.get("/all", response_model=List[schemas.HolidayResponse])
 def get_holidays(db: Session = Depends(get_db)):
     """Fetch all declared holidays"""
     return db.query(models.Holiday).order_by(models.Holiday.date.desc()).all()
 
+@router.post("", response_model=schemas.HolidayResponse)
 @router.post("/", response_model=schemas.HolidayResponse)
+@router.post("/create", response_model=schemas.HolidayResponse)
 def create_holiday(holiday: schemas.HolidayCreate, db: Session = Depends(get_db)):
     """Declare a new holiday"""
-    # Check if a holiday already exists on this date
     existing = db.query(models.Holiday).filter(models.Holiday.date == holiday.date).first()
     if existing:
         raise HTTPException(status_code=400, detail="A holiday is already declared on this date.")
@@ -28,6 +31,7 @@ def create_holiday(holiday: schemas.HolidayCreate, db: Session = Depends(get_db)
     return new_holiday
 
 @router.delete("/{holiday_id}")
+@router.delete("/delete/{holiday_id}")
 def delete_holiday(holiday_id: int, db: Session = Depends(get_db)):
     """Delete a holiday"""
     db_holiday = db.query(models.Holiday).filter(models.Holiday.id == holiday_id).first()

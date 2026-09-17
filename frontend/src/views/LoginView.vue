@@ -1,150 +1,401 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
-    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-teal-400/20 rounded-full blur-3xl"></div>
-
-    <div class="bg-white rounded-2xl shadow-xl shadow-blue-900/5 w-full max-w-md overflow-hidden relative z-10 border border-slate-100">
-      <div class="bg-gradient-to-r from-blue-700 via-blue-600 to-teal-600 p-6 md:p-8 text-center relative overflow-hidden">
-        <div class="absolute -top-10 -right-10 w-28 h-28 bg-teal-400/20 rounded-full blur-xl pointer-events-none"></div>
-        <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-blue-400/20 rounded-full blur-xl pointer-events-none"></div>
-        <div class="relative z-10">
-          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-teal-100 mb-3 shadow-inner">
-            <svg class="w-3.5 h-3.5 text-teal-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span>Industry–Academia Collaboration</span>
-          </div>
-          <div class="flex items-center justify-center gap-2 text-white">
-            <span class="text-xl md:text-2xl font-bold tracking-tight">CallHealth</span>
-            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-xs font-black text-teal-200 border border-white/25 shadow-sm leading-none" title="Collaboration">✕</span>
-            <span class="text-xl md:text-2xl font-extrabold text-teal-100 tracking-wider">HITAM</span>
-          </div>
-          <p class="text-xs md:text-sm text-blue-100 font-medium mt-1.5 tracking-wide">Project Tracker Workspace</p>
+  <div class="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl w-full max-w-lg overflow-hidden relative z-10 transition-all duration-300">
+      
+      <!-- Top Brand Header -->
+      <div class="p-6 text-center border-b border-zinc-800 bg-zinc-950">
+        <!-- Fixly Brand Logo -->
+        <div class="flex items-center justify-center mb-2.5">
+          <img 
+            src="/logo.png" 
+            alt="Fixly" 
+            class="w-12 h-12 object-contain drop-shadow-[0_4px_16px_rgba(231,138,68,0.25)] transition-transform hover:scale-105 duration-200" 
+          />
         </div>
+
+        <div class="flex items-center justify-center gap-1.5">
+          <h1 class="text-xl font-bold tracking-tight text-white">
+            Fixly Office
+          </h1>
+        </div>
+        <p class="text-xs text-zinc-400 mt-0.5 font-normal">
+          Scrum, Sprint & Workforce Management
+        </p>
       </div>
       
-      <div class="p-5 md:p-8">
-        <div class="flex space-x-1 mb-6 md:mb-8 bg-slate-100 p-1 md:p-1.5 rounded-lg">
-          <button @click="authMode = 'login'" :class="['flex-1 py-2 md:py-2.5 rounded-md text-[10px] md:text-xs font-bold transition-all duration-200 uppercase tracking-wide', authMode === 'login' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-blue-600']">Student</button>
-          <button @click="authMode = 'register'" :class="['flex-1 py-2 md:py-2.5 rounded-md text-[10px] md:text-xs font-bold transition-all duration-200 uppercase tracking-wide', authMode === 'register' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-blue-600']">Register</button>
-          <button @click="authMode = 'admin'" :class="['flex-1 py-2 md:py-2.5 rounded-md text-[10px] md:text-xs font-bold transition-all duration-200 uppercase tracking-wide', authMode === 'admin' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800']">Admin</button>
-        </div>
-
-        <div v-if="authStore.authError" class="mb-5 p-3 bg-red-50 text-red-700 text-xs md:text-sm rounded-lg border border-red-100 text-center font-medium">
-          {{ authStore.authError }}
-        </div>
+      <div class="p-6 bg-zinc-900">
         
-        <form v-if="authMode === 'login'" @submit.prevent="handleLogin" class="space-y-4 md:space-y-5">
-          <div>
-            <label class="block text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Roll Number</label>
-            <input type="text" required v-model="loginRoll" class="w-full rounded-xl border border-slate-200 py-2.5 md:py-3 px-3 md:px-4 text-sm md:text-base focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. 24E51A6634">
-          </div>
-          <div>
-            <label class="block text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
-            <div class="relative">
-              <input :type="showLoginPass ? 'text' : 'password'" required v-model="loginPass" class="w-full rounded-xl border border-slate-200 py-2.5 md:py-3 pl-3 pr-10 md:pl-4 md:pr-12 text-sm md:text-base focus:ring-2 focus:ring-blue-500 outline-none" placeholder="••••••••">
-              <button type="button" @click="showLoginPass = !showLoginPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
-                <svg v-if="!showLoginPass" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.53-3.16l2.16 2.16m3.85-3.85a3.001 3.001 0 00-3.85-3.85l2.16-2.16c.55-.16 1.13-.25 1.73-.25 4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.14 3.74m-4.66-4.66l-5.6 5.6M3 3l18 18" /></svg>
+        <!-- Tab Selector: Google & Roles / Legacy Password / Admin Key -->
+        <div class="grid grid-cols-3 gap-1 mb-5 bg-zinc-950 p-1 rounded border border-zinc-800 text-xs">
+          <button 
+            type="button"
+            @click="authMode = 'google'" 
+            :class="['py-2 rounded text-xs transition-colors cursor-pointer', 
+              authMode === 'google' ? 'bg-orange-500 text-black font-bold shadow-sm' : 'text-zinc-400 hover:text-white']">
+            Google / Roles
+          </button>
+          <button 
+            type="button"
+            @click="authMode = 'login'" 
+            :class="['py-2 rounded text-xs transition-colors cursor-pointer', 
+              authMode === 'login' ? 'bg-orange-500 text-black font-bold shadow-sm' : 'text-zinc-400 hover:text-white']">
+            Employee ID
+          </button>
+          <button 
+            type="button"
+            @click="authMode = 'admin'" 
+            :class="['py-2 rounded text-xs transition-colors cursor-pointer', 
+              authMode === 'admin' ? 'bg-orange-500 text-black font-bold shadow-sm' : 'text-zinc-400 hover:text-white']">
+            Admin Key
+          </button>
+        </div>
+
+        <!-- Error Alert -->
+        <div v-if="authStore.authError" class="mb-4 p-3 bg-zinc-950 border border-zinc-700 text-red-300 text-xs rounded flex items-center gap-2">
+          <span class="font-medium">{{ authStore.authError }}</span>
+        </div>
+
+        <!-- Pending Approval Waiting Screen -->
+        <div v-if="pendingApprovalUser" class="mb-5 p-5 bg-zinc-950 border border-zinc-800 rounded text-center space-y-2.5">
+          <img src="/logo.png" alt="Fixly" class="w-9 h-9 mx-auto object-contain opacity-90 drop-shadow-sm" />
+          <h3 class="text-sm font-semibold text-white">Registration Pending Approval</h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Your application for <strong>{{ pendingApprovalUser.name }}</strong> ({{ pendingApprovalUser.email }}) is awaiting administrator approval.
+          </p>
+          <button 
+            @click="checkApprovalStatus" 
+            class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium px-3 py-1.5 rounded transition-colors border border-zinc-700 cursor-pointer mt-1">
+            Check Status Again
+          </button>
+        </div>
+
+        <!-- MODE 1: GOOGLE SIGN-IN & DEMO ROLES SELECTOR -->
+        <div v-if="authMode === 'google'" class="space-y-5">
+          
+          <!-- Google Sign-In Action -->
+          <div class="space-y-3">
+            <button 
+              type="button"
+              @click="triggerGoogleSignInPrompt"
+              :disabled="authStore.isLoading"
+              class="w-full btn-google font-semibold py-2.5 px-4 rounded-lg transition-all text-xs flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span class="font-semibold text-xs tracking-normal" style="color: #1f2937 !important;">
+                {{ authStore.isLoading ? 'Verifying with Google...' : 'Continue with Google' }}
+              </span>
+            </button>
+
+            <!-- Optional Manual Email Simulator -->
+            <div v-if="showManualGoogleInput" class="p-3 bg-zinc-950 rounded-lg border border-zinc-800 space-y-2">
+              <label class="block text-[10px] font-bold text-zinc-400 uppercase">Test Google Email Sign-In</label>
+              <div class="flex gap-2">
+                <input 
+                  type="email" 
+                  v-model="customGoogleEmail" 
+                  placeholder="e.g. yourname@gmail.com" 
+                  class="flex-1 bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white outline-none focus:border-orange-500 font-mono"
+                />
+                <button 
+                  @click="handleCustomGoogleAuth" 
+                  class="bg-orange-500 hover:bg-orange-400 text-black text-xs font-bold px-3 py-1.5 rounded cursor-pointer transition-colors">
+                  Sign In
+                </button>
+              </div>
+            </div>
+
+            <div class="text-center pt-0.5">
+              <button 
+                type="button"
+                @click="showManualGoogleInput = !showManualGoogleInput" 
+                class="text-[11px] text-zinc-400 hover:text-orange-400 transition-colors inline-flex items-center gap-1.5 cursor-pointer font-medium">
+                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                <span>{{ showManualGoogleInput ? 'Hide test email input' : 'Or test with custom Google email address' }}</span>
               </button>
             </div>
           </div>
-          <button type="submit" :disabled="authStore.isLoading" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium py-3 rounded-xl shadow-md transition-all active:scale-[0.98] text-sm md:text-base mt-2 disabled:opacity-70">
-            Login to Workspace
+
+          <!-- Divider -->
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-zinc-800"></div>
+            <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
+              1-Click Role Access (Evaluation)
+            </span>
+            <div class="flex-grow border-t border-zinc-800"></div>
+          </div>
+
+          <!-- Quick Role Selector Grid -->
+          <div class="grid grid-cols-2 gap-2">
+            <button 
+              v-for="roleItem in DEMO_ACCOUNTS" 
+              :key="roleItem.role"
+              @click="handleDemoSelect(roleItem)"
+              class="p-2.5 bg-zinc-950 hover:bg-zinc-850 border border-zinc-800 hover:border-orange-500/40 rounded text-left transition-colors cursor-pointer flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1 mb-0.5">
+                  <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 font-bold">
+                    {{ roleItem.badge }}
+                  </span>
+                </div>
+                <p class="font-bold text-xs text-white">
+                  {{ roleItem.name }}
+                </p>
+                <p class="text-[10px] text-zinc-400 truncate mt-0.5">{{ roleItem.title }}</p>
+              </div>
+              <span class="text-[9px] text-zinc-500 font-mono mt-1.5 truncate">{{ roleItem.email }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- MODE 2: EMPLOYEE ID / PASSWORD LOGIN -->
+        <form v-if="authMode === 'login'" @submit.prevent="handleLogin" class="space-y-3.5">
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Employee ID</label>
+            <input 
+              type="text" 
+              required 
+              v-model="loginRoll" 
+              class="w-full rounded bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 py-2.5 px-3 text-xs focus:border-zinc-500 outline-none uppercase tracking-wider font-mono" 
+              placeholder="e.g. FX-1001"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Password</label>
+            <input 
+              type="password" 
+              required 
+              v-model="loginPass" 
+              class="w-full rounded bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 py-2.5 px-3 text-xs focus:border-zinc-500 outline-none" 
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            :disabled="authStore.isLoading" 
+            class="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-2.5 rounded transition-colors text-xs mt-2 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
+            <span>Sign In to Fixly Workspace</span>
           </button>
         </form>
 
-        <form v-if="authMode === 'register'" @submit.prevent="handleRegister" class="space-y-4 md:space-y-5">
+        <!-- MODE 3: ADMIN / EXECUTIVE ACCESS -->
+        <form v-if="authMode === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-3.5">
           <div>
-            <label class="block text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
-            <input type="text" required v-model="regName" class="w-full rounded-xl border border-slate-200 py-2.5 md:py-3 px-3 md:px-4 text-sm md:text-base focus:ring-2 focus:ring-blue-500 outline-none" placeholder="John Doe">
+            <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Admin Username</label>
+            <input 
+              type="text" 
+              required 
+              v-model="adminUser" 
+              class="w-full rounded bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 py-2.5 px-3 text-xs focus:border-zinc-500 outline-none" 
+              placeholder="admin or viewer"
+            />
           </div>
+
           <div>
-            <label class="block text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Roll Number</label>
-            <input type="text" required v-model="regRoll" class="w-full rounded-xl border border-slate-200 py-2.5 md:py-3 px-3 md:px-4 text-sm md:text-base focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. 24E51A6634">
+            <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Password</label>
+            <input 
+              type="password" 
+              required 
+              v-model="adminPass" 
+              class="w-full rounded bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 py-2.5 px-3 text-xs focus:border-zinc-500 outline-none" 
+              placeholder="Fixly@2026 or Hitam@2026"
+            />
           </div>
-          <div>
-            <label class="block text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
-            <div class="relative">
-              <input :type="showRegPass ? 'text' : 'password'" required v-model="regPass" class="w-full rounded-xl border border-slate-200 py-2.5 md:py-3 pl-3 pr-10 md:pl-4 md:pr-12 text-sm md:text-base focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Create a password">
-              <button type="button" @click="showRegPass = !showRegPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
-                <svg v-if="!showRegPass" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.53-3.16l2.16 2.16m3.85-3.85a3.001 3.001 0 00-3.85-3.85l2.16-2.16c.55-.16 1.13-.25 1.73-.25 4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.14 3.74m-4.66-4.66l-5.6 5.6M3 3l18 18" /></svg>
-              </button>
-            </div>
-          </div>
-          <button type="submit" :disabled="authStore.isLoading" class="w-full bg-gradient-to-r from-teal-500 to-teal-400 text-white font-medium py-3 rounded-xl shadow-md transition-all active:scale-[0.98] text-sm md:text-base mt-2 disabled:opacity-70">
-            Create Account
+
+          <button 
+            type="submit" 
+            :disabled="authStore.isLoading" 
+            class="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-2.5 rounded transition-colors text-xs mt-2 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
+            <span>Access Administrator Portal</span>
           </button>
         </form>
 
-        <form v-if="authMode === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-4 md:space-y-5">
-          <div>
-            <label class="block text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Admin Username</label>
-            <input type="text" required v-model="adminUser" class="w-full rounded-xl border border-slate-200 py-2.5 md:py-3 px-3 md:px-4 text-sm md:text-base focus:ring-2 focus:ring-slate-800 outline-none bg-slate-50">
+        <!-- Footer Info -->
+        <div class="mt-6 pt-4 border-t border-zinc-800 text-center text-xs text-zinc-500 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <img src="/logo.png" alt="Fixly" class="w-3.5 h-3.5 object-contain opacity-60" />
+            <span>Fixly Enterprise Office</span>
           </div>
-          <div>
-            <label class="block text-[10px] md:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
-            <div class="relative">
-              <input :type="showAdminPass ? 'text' : 'password'" required v-model="adminPass" class="w-full rounded-xl border border-slate-200 py-2.5 md:py-3 pl-3 pr-10 md:pl-4 md:pr-12 text-sm md:text-base focus:ring-2 focus:ring-slate-800 outline-none bg-slate-50">
-              <button type="button" @click="showAdminPass = !showAdminPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
-                <svg v-if="!showAdminPass" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.53-3.16l2.16 2.16m3.85-3.85a3.001 3.001 0 00-3.85-3.85l2.16-2.16c.55-.16 1.13-.25 1.73-.25 4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.14 3.74m-4.66-4.66l-5.6 5.6M3 3l18 18" /></svg>
-              </button>
-            </div>
-          </div>
-          <button type="submit" :disabled="authStore.isLoading" class="w-full bg-slate-800 text-white font-medium py-3 rounded-xl shadow-md transition-all active:scale-[0.98] hover:bg-slate-700 text-sm md:text-base mt-2 disabled:opacity-70">
-            Access Admin Panel
-          </button>
-        </form>
+          <span class="font-mono text-[10px]">v2.4.0</span>
+        </div>
+
       </div>
     </div>
+
+    <!-- Applicant Onboarding Modal -->
+    <div v-if="showOnboardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6 max-w-md w-full shadow-xl space-y-4">
+        <div class="pb-3 border-b border-zinc-800 flex items-center gap-3">
+          <img src="/logo.png" alt="Fixly" class="w-8 h-8 object-contain shrink-0" />
+          <div>
+            <h3 class="text-base font-bold text-white">Select Your Intern Track</h3>
+            <p class="text-xs text-zinc-400 mt-0.5">Welcome, {{ authStore.onboardingName }}. Select your engineering track to complete registration.</p>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label 
+            v-for="track in INTERN_TRACKS"
+            :key="track.id"
+            :class="[
+              'block p-3 rounded border text-xs cursor-pointer transition-colors',
+              selectedTrack === track.id ? 'bg-orange-500/10 border-orange-500/40 text-white font-semibold' : 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+            ]">
+            <input type="radio" :value="track.id" v-model="selectedTrack" class="sr-only" />
+            <div class="font-semibold">{{ track.title }}</div>
+            <div class="text-[11px] text-zinc-400 mt-0.5">{{ track.description }}</div>
+          </label>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button 
+            @click="showOnboardModal = false"
+            class="px-3 py-1.5 rounded text-xs text-zinc-400 hover:text-white">
+            Cancel
+          </button>
+          <button 
+            @click="submitOnboarding"
+            class="bg-orange-500 hover:bg-orange-400 text-black font-bold px-4 py-2 rounded text-xs cursor-pointer">
+            Submit for Admin Approval
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Persistent Footer for Login Page -->
+    <footer class="fixed bottom-0 left-0 right-0 py-2.5 px-4 text-zinc-500 text-xs border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-sm z-20">
+      <div class="max-w-6xl mx-auto flex items-center justify-center gap-2 text-zinc-500">
+        <img src="/logo.png" alt="Fixly" class="w-3.5 h-3.5 object-contain opacity-40" />
+        <span class="text-[11px]">&copy; 2026 Fixly Services &middot; Powered by SyncIntent</span>
+      </div>
+    </footer>
+
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { getApiBase } from '@/config'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-// State
-const authMode = ref('login')
+const authMode = ref('google')
+const showManualGoogleInput = ref(false)
+const customGoogleEmail = ref('')
+const pendingApprovalUser = ref(null)
 
-// Visibility Toggles
-const showLoginPass = ref(false)
-const showRegPass = ref(false)
-const showAdminPass = ref(false)
-
-// Form Inputs
 const loginRoll = ref('')
 const loginPass = ref('')
-const regName = ref('')
-const regRoll = ref('')
-const regPass = ref('')
+
 const adminUser = ref('')
 const adminPass = ref('')
+
+const showOnboardModal = ref(false)
+const selectedTrack = ref('frontend_developer')
+
+const INTERN_TRACKS = [
+  { id: 'frontend_developer', title: 'Frontend Developer Intern', description: 'Vue 3, Tailwind CSS, UI/UX Components' },
+  { id: 'backend_developer', title: 'Backend Developer Intern', description: 'FastAPI, Python, SQLAlchemy, REST APIs' },
+  { id: 'devops_developer', title: 'DevOps Developer Intern', description: 'CI/CD, Docker, Cloud Deployments, Health Monitoring' }
+]
+
+const DEMO_ACCOUNTS = [
+  { role: 'ceo', name: 'Abhijeet', title: 'Chief Executive Officer', badge: 'CEO' },
+  { role: 'cto', name: 'Karthik', title: 'Chief Technology Officer', badge: 'CTO' },
+  { role: 'coo', name: 'Nishanth', title: 'Chief Operating Officer', badge: 'COO' },
+  { role: 'cfo', name: 'Dhanya', title: 'Chief Financial Officer', badge: 'CFO' },
+  { role: 'cmo', name: 'Anju Vaishnavi', title: 'Chief Marketing Officer', badge: 'CMO' },
+  { role: 'cdc', name: 'CDC Head', title: 'Career Development Center', badge: 'Reviewer' },
+  { role: 'mentor', name: 'Rohit Sir', title: 'Program Head / Mentor', badge: 'Reviewer' },
+  { role: 'admin', name: 'Sai Abhineeth', title: 'Admin / Tech Consultant', badge: 'Admin' }
+]
+
+const redirectUser = () => {
+  router.push('/dashboard')
+}
+
+const triggerGoogleSignInPrompt = async () => {
+  // Show the manual email input so the user can enter their Google email
+  showManualGoogleInput.value = true
+}
+
+const handleCustomGoogleAuth = async () => {
+  if (!customGoogleEmail.value.trim()) return
+  const result = await authStore.loginWithGoogle({
+    email: customGoogleEmail.value.trim(),
+    name: customGoogleEmail.value.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())
+  })
+  if (result?.status === 'SUCCESS') {
+    redirectUser()
+  } else if (result?.status === 'ONBOARDING_REQUIRED') {
+    showOnboardModal.value = true
+  } else if (result?.status === 'PENDING_APPROVAL') {
+    pendingApprovalUser.value = result.data.user
+  }
+}
+
+const submitOnboarding = async () => {
+  const result = await authStore.onboardRole(
+    authStore.onboardingName,
+    authStore.onboardingEmail,
+    selectedTrack.value
+  )
+  showOnboardModal.value = false
+  if (result?.status === 'PENDING_APPROVAL') {
+    pendingApprovalUser.value = result.data.user
+  }
+}
+
+const checkApprovalStatus = async () => {
+  if (!pendingApprovalUser.value) return
+  const res = await fetch(`${getApiBase()}/api/auth/me?user_id=${pendingApprovalUser.value.id}`)
+  if (res.ok) {
+    const data = await res.json()
+    if (data.user.accountStatus === 'ACTIVE') {
+      authStore.user = data.user
+      authStore.permissions = data.permissions
+      localStorage.setItem('fixlyUser', JSON.stringify(data.user))
+      localStorage.setItem('fixlyPermissions', JSON.stringify(data.permissions))
+      pendingApprovalUser.value = null
+      redirectUser()
+    } else {
+      alert('Your account is still pending administrator approval.')
+    }
+  }
+}
+
+const handleDemoSelect = async (item) => {
+  const success = await authStore.demoLogin(item.role)
+  if (success) {
+    redirectUser()
+  }
+}
 
 const handleLogin = async () => {
   const success = await authStore.login(loginRoll.value, loginPass.value)
   if (success) {
-    if (authStore.user.role === 'admin') router.push('/admin')
-    else router.push('/dashboard')
+    redirectUser()
   }
-}
-
-const handleRegister = async () => {
-  const success = await authStore.register({
-    name: regName.value,
-    rollNumber: regRoll.value,
-    team: "",
-    password: regPass.value
-  })
-  if (success) router.push('/dashboard')
 }
 
 const handleAdminLogin = async () => {
   const success = await authStore.adminLogin(adminUser.value, adminPass.value)
-  if (success) router.push('/admin')
+  if (success) {
+    redirectUser()
+  }
 }
+
+onMounted(() => {
+  if (authStore.user && !authStore.isPendingApproval) {
+    redirectUser()
+  }
+})
 </script>
