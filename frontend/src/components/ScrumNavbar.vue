@@ -114,40 +114,6 @@
           <span class="text-[10px] text-orange-400 font-mono">{{ roleDisplayTitle }}</span>
         </div>
 
-        <!-- Role Switcher Trigger -->
-        <div class="relative" ref="roleMenuRef">
-          <button 
-            @click.stop="toggleRoleMenu"
-            title="Switch User Role"
-            class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white hover:border-orange-500/40 px-2.5 py-1.5 rounded border border-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
-            <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-            <span class="hidden sm:inline">Role</span>
-          </button>
-
-          <!-- Dropdown Menu for Roles -->
-          <div v-if="showRoleMenu" 
-            class="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl p-2 z-50">
-            <div class="p-2 border-b border-zinc-800">
-              <p class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Select Active Role</p>
-              <p class="text-[10px] text-zinc-500">Instant evaluation mode</p>
-            </div>
-            <div class="py-1 max-h-80 overflow-y-auto space-y-1">
-              <button 
-                v-for="roleItem in DEMO_ROLES" 
-                :key="roleItem.role"
-                @click="switchRole(roleItem)"
-                class="w-full text-left px-3 py-2 rounded text-xs flex items-center justify-between hover:bg-zinc-800 transition-colors group cursor-pointer">
-                <div>
-                  <p class="font-semibold text-zinc-200 group-hover:text-white">{{ roleItem.name }}</p>
-                  <p class="text-[10px] text-zinc-400">{{ roleItem.title }}</p>
-                </div>
-                <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 font-bold">
-                  {{ roleItem.tag }}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
 
         <!-- In-App Notifications Bell -->
         <div class="relative" ref="notifPanelRef">
@@ -270,27 +236,9 @@ const isDashboard = computed(() => {
 
 defineEmits(['toggle-sidebar'])
 
-const showRoleMenu = ref(false)
 const showNotifPanel = ref(false)
-const roleMenuRef = ref(null)
 const notifPanelRef = ref(null)
 let pollTimer = null
-
-const DEMO_ROLES = [
-  { role: 'ceo', name: 'Abhijeet', title: 'Chief Executive Officer', tag: 'Admin' },
-  { role: 'cto', name: 'Karthik', title: 'Chief Technology Officer', tag: 'Admin' },
-  { role: 'coo', name: 'Nishanth', title: 'Chief Operating Officer', tag: 'Executive' },
-  { role: 'cfo', name: 'Dhanya', title: 'Chief Financial Officer', tag: 'Executive' },
-  { role: 'cmo', name: 'Anju Vaishnavi', title: 'Chief Marketing Officer', tag: 'Executive' },
-  { role: 'cdc', name: 'CDC Head', title: 'Career Development Center', tag: 'Reviewer' },
-  { role: 'mentor', name: 'Rohit Sir', title: 'Program Head / Mentor', tag: 'Reviewer' },
-  { role: 'scrum_head', name: 'Scrum Lead', title: 'Lead Scrum Head', tag: 'Scrum Lead' },
-  { role: 'frontend_developer', name: 'Frontend Intern', title: 'Frontend Developer Intern', tag: 'Intern' },
-  { role: 'backend_developer', name: 'Backend Intern', title: 'Backend Developer Intern', tag: 'Intern' },
-  { role: 'devops_developer', name: 'DevOps Intern', title: 'DevOps Developer Intern', tag: 'Intern' },
-  { role: 'viewer', name: 'Executive Viewer', title: 'Executive Read-Only Reviewer', tag: 'Reviewer' },
-  { role: 'admin', name: 'System Admin', title: 'System Administrator', tag: 'Admin' }
-]
 
 const roleDisplayTitle = computed(() => {
   const u = authStore.user
@@ -312,17 +260,9 @@ const roleDisplayTitle = computed(() => {
   return u.name
 })
 
-const toggleRoleMenu = () => {
-  showRoleMenu.value = !showRoleMenu.value
-  if (showRoleMenu.value) {
-    showNotifPanel.value = false
-  }
-}
-
 const toggleNotifications = () => {
   showNotifPanel.value = !showNotifPanel.value
   if (showNotifPanel.value) {
-    showRoleMenu.value = false
     if (authStore.user?.id) {
       scrumStore.fetchNotifications(authStore.user.id)
     }
@@ -330,22 +270,8 @@ const toggleNotifications = () => {
 }
 
 const handleClickOutside = (e) => {
-  if (showRoleMenu.value && roleMenuRef.value && !roleMenuRef.value.contains(e.target)) {
-    showRoleMenu.value = false
-  }
   if (showNotifPanel.value && notifPanelRef.value && !notifPanelRef.value.contains(e.target)) {
     showNotifPanel.value = false
-  }
-}
-
-const switchRole = async (item) => {
-  showRoleMenu.value = false
-  const ok = await authStore.demoLogin(item.role)
-  if (ok) {
-    router.push('/dashboard')
-    if (authStore.user?.id) {
-      scrumStore.fetchNotifications(authStore.user.id)
-    }
   }
 }
 

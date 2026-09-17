@@ -4,20 +4,6 @@
     <!-- Top Consolidated Global Navbar (Desktop & Mobile) -->
     <ScrumNavbar @toggle-sidebar="mobileDrawerOpen = !mobileDrawerOpen" />
 
-    <!-- Reviewer Oversight Mode Alert for CDC / Program Head / Mentor -->
-    <div v-if="authStore.isViewOnly" class="bg-zinc-900/90 border-b border-zinc-800 px-4 sm:px-6 py-2 text-xs text-zinc-300">
-      <div class="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded bg-amber-400 shrink-0"></span>
-          <p>
-            <strong class="text-zinc-100">Reviewer Mode:</strong> Logged in as <span class="text-white font-medium">{{ authStore.user?.positionTitle || 'CDC / Program Head' }}</span>. Full view privileges across sprints, attendance records, audit logs, and proposals. Approval actions are restricted to administrators.
-          </p>
-        </div>
-        <span class="bg-zinc-800 text-zinc-300 border border-zinc-700 text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0">
-          View Only
-        </span>
-      </div>
-    </div>
 
     <!-- Mobile Horizontal Subtask Quick-Strip (Single-tap switching between sub-pages on mobile, strictly hidden on any dashboard) -->
     <div v-if="!isDashboard" class="md:hidden bg-zinc-900/60 border-b border-zinc-800/80 px-3 py-2 overflow-x-auto no-scrollbar flex items-center gap-1.5 shrink-0">

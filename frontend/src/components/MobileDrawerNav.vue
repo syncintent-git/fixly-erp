@@ -172,37 +172,6 @@
           </div>
         </div>
 
-        <!-- Role Switcher Expandable -->
-        <div class="space-y-1.5">
-          <button 
-            @click="showRoleList = !showRoleList"
-            class="w-full bg-zinc-900 hover:bg-zinc-850 text-zinc-200 hover:text-white px-3 py-2 rounded-lg border border-zinc-800 text-xs font-medium flex items-center justify-between transition-colors cursor-pointer">
-            <div class="flex items-center gap-2">
-              <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-              <span>Switch Evaluation Role</span>
-            </div>
-            <svg :class="['w-3.5 h-3.5 text-zinc-400 transition-transform', showRoleList ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-
-          <!-- Dropdown of Roles -->
-          <div v-if="showRoleList" class="bg-zinc-900 border border-zinc-800 rounded-lg p-1.5 space-y-1 max-h-52 overflow-y-auto">
-            <button 
-              v-for="roleItem in DEMO_ROLES" 
-              :key="roleItem.role"
-              @click="onRoleSelect(roleItem)"
-              class="w-full text-left px-2.5 py-1.5 rounded text-xs flex items-center justify-between hover:bg-zinc-800 transition-colors cursor-pointer group">
-              <div>
-                <p class="font-medium text-zinc-200 group-hover:text-white">{{ roleItem.name }}</p>
-                <p class="text-[9px] text-zinc-400">{{ roleItem.title }}</p>
-              </div>
-              <span class="text-[9px] font-mono px-1 rounded bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold">
-                {{ roleItem.tag }}
-              </span>
-            </button>
-          </div>
-        </div>
 
         <!-- Theme Toggle Button -->
         <button 
@@ -259,23 +228,6 @@ const authStore = useAuthStore()
 const scrumStore = useScrumStore()
 const themeStore = useThemeStore()
 
-const showRoleList = ref(false)
-
-const DEMO_ROLES = [
-  { role: 'ceo', name: 'Abhijeet', title: 'Chief Executive Officer', tag: 'Admin' },
-  { role: 'cto', name: 'Karthik', title: 'Chief Technology Officer', tag: 'Admin' },
-  { role: 'coo', name: 'Nishanth', title: 'Chief Operating Officer', tag: 'Executive' },
-  { role: 'cfo', name: 'Dhanya', title: 'Chief Financial Officer', tag: 'Executive' },
-  { role: 'cmo', name: 'Anju Vaishnavi', title: 'Chief Marketing Officer', tag: 'Executive' },
-  { role: 'cdc', name: 'CDC Head', title: 'Career Development Center', tag: 'Reviewer' },
-  { role: 'mentor', name: 'Rohit Sir', title: 'Program Head / Mentor', tag: 'Reviewer' },
-  { role: 'scrum_head', name: 'Scrum Lead', title: 'Lead Scrum Head', tag: 'Scrum Lead' },
-  { role: 'frontend_developer', name: 'Frontend Intern', title: 'Frontend Developer Intern', tag: 'Intern' },
-  { role: 'backend_developer', name: 'Backend Intern', title: 'Backend Developer Intern', tag: 'Intern' },
-  { role: 'devops_developer', name: 'DevOps Intern', title: 'DevOps Developer Intern', tag: 'Intern' },
-  { role: 'viewer', name: 'Executive Viewer', title: 'Executive Read-Only Reviewer', tag: 'Reviewer' },
-  { role: 'admin', name: 'System Admin', title: 'System Administrator', tag: 'Admin' }
-]
 
 const currentSection = computed(() => {
   if (route.path.startsWith('/dashboard')) return 'dashboard'
@@ -299,17 +251,6 @@ const navigateToHub = (path) => {
   emit('close')
 }
 
-const onRoleSelect = async (item) => {
-  showRoleList.value = false
-  const ok = await authStore.demoLogin(item.role)
-  if (ok) {
-    router.push('/dashboard')
-    if (authStore.user?.id) {
-      scrumStore.fetchNotifications(authStore.user.id)
-    }
-  }
-  emit('close')
-}
 
 const handleLogout = async () => {
   await authStore.logout()
