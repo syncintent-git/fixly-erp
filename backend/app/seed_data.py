@@ -92,7 +92,7 @@ def seed_scrum_data(db: Session):
         # CEO (Full Admin)
         {
             "name": "Abhijeet",
-            "email": "abhijeetlg1@gmail.com",
+            "email": os.getenv("CEO_EMAIL", "abhijeetlg1@gmail.com"),
             "rollNumber": "CEO-01",
             "team": "Executive",
             "role": "ceo",
@@ -103,7 +103,7 @@ def seed_scrum_data(db: Session):
         # CTO (Full Admin)
         {
             "name": "Karthik",
-            "email": "notmedha@gmail.com",
+            "email": os.getenv("CTO_EMAIL", "notmedha@gmail.com"),
             "rollNumber": "CTO-01",
             "team": "Technology",
             "role": "cto",
@@ -114,7 +114,7 @@ def seed_scrum_data(db: Session):
         # CDC (View-Only Reviewer)
         {
             "name": "CDC Head",
-            "email": "head.cdc@hitam.org",
+            "email": os.getenv("CDC_EMAIL", "head.cdc@hitam.org"),
             "rollNumber": "CDC-01",
             "team": "Career Development",
             "role": "cdc",
@@ -125,7 +125,7 @@ def seed_scrum_data(db: Session):
         # Program Head / Mentor (View-Only Reviewer)
         {
             "name": "Rohit Sir",
-            "email": "programhead.csm@hitam.org",
+            "email": os.getenv("MENTOR_EMAIL", "programhead.csm@hitam.org"),
             "rollNumber": "PROG-HEAD",
             "team": "Academic Leadership",
             "role": "mentor",
@@ -136,7 +136,7 @@ def seed_scrum_data(db: Session):
         # COO
         {
             "name": "Nishanth",
-            "email": "nishanth.chillumula@gmail.com",
+            "email": os.getenv("COO_EMAIL", "nishanth.chillumula@gmail.com"),
             "rollNumber": "COO-01",
             "team": "Operations",
             "role": "coo",
@@ -147,7 +147,7 @@ def seed_scrum_data(db: Session):
         # CFO
         {
             "name": "Dhanya",
-            "email": "mamididhanyasvi@gmail.com",
+            "email": os.getenv("CFO_EMAIL", "mamididhanyasvi@gmail.com"),
             "rollNumber": "CFO-01",
             "team": "Finance",
             "role": "cfo",
@@ -158,7 +158,7 @@ def seed_scrum_data(db: Session):
         # CMO
         {
             "name": "Anju Vaishnavi",
-            "email": "anjuvaishnavi10@gmail.com",
+            "email": os.getenv("CMO_EMAIL", "anjuvaishnavi10@gmail.com"),
             "rollNumber": "CMO-01",
             "team": "Marketing",
             "role": "cmo",
@@ -169,7 +169,7 @@ def seed_scrum_data(db: Session):
         # Admin / Tech Consultant
         {
             "name": "Sai Abhineeth",
-            "email": "saiabhineeth23@gmail.com",
+            "email": os.getenv("ADMIN_EMAIL", "saiabhineeth23@gmail.com"),
             "rollNumber": "ADMIN-01",
             "team": "Technology",
             "role": "admin",

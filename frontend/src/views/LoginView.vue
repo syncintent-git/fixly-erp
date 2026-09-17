@@ -32,7 +32,7 @@
             @click="authMode = 'google'" 
             :class="['py-2 rounded text-xs transition-colors cursor-pointer', 
               authMode === 'google' ? 'bg-orange-500 text-black font-bold shadow-sm' : 'text-zinc-400 hover:text-white']">
-            Google / Roles
+            Google
           </button>
           <button 
             type="button"
@@ -90,37 +90,6 @@
               </span>
             </button>
           </div>
-
-          <!-- Divider -->
-          <div class="relative flex py-1 items-center">
-            <div class="flex-grow border-t border-zinc-800"></div>
-            <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
-              1-Click Role Access (Evaluation)
-            </span>
-            <div class="flex-grow border-t border-zinc-800"></div>
-          </div>
-
-          <!-- Quick Role Selector Grid -->
-          <div class="grid grid-cols-2 gap-2">
-            <button 
-              v-for="roleItem in DEMO_ACCOUNTS" 
-              :key="roleItem.role"
-              @click="handleDemoSelect(roleItem)"
-              class="p-2.5 bg-zinc-950 hover:bg-zinc-850 border border-zinc-800 hover:border-orange-500/40 rounded text-left transition-colors cursor-pointer flex flex-col justify-between">
-              <div>
-                <div class="flex items-center justify-between gap-1 mb-0.5">
-                  <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 font-bold">
-                    {{ roleItem.badge }}
-                  </span>
-                </div>
-                <p class="font-bold text-xs text-white">
-                  {{ roleItem.name }}
-                </p>
-                <p class="text-[10px] text-zinc-400 truncate mt-0.5">{{ roleItem.title }}</p>
-              </div>
-              <span class="text-[9px] text-zinc-500 font-mono mt-1.5 truncate">{{ roleItem.email }}</span>
-            </button>
-          </div>
         </div>
 
         <!-- MODE 2: EMPLOYEE ID / PASSWORD LOGIN -->
@@ -175,7 +144,7 @@
               required 
               v-model="adminPass" 
               class="w-full rounded bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 py-2.5 px-3 text-xs focus:border-zinc-500 outline-none" 
-              placeholder="Fixly@2026 or Hitam@2026"
+              placeholder="Enter your password"
             />
           </div>
 
@@ -280,17 +249,6 @@ const INTERN_TRACKS = [
   { id: 'devops_developer', title: 'DevOps Developer Intern', description: 'CI/CD, Docker, Cloud Deployments, Health Monitoring' }
 ]
 
-const DEMO_ACCOUNTS = [
-  { role: 'ceo', name: 'Abhijeet', title: 'Chief Executive Officer', badge: 'CEO' },
-  { role: 'cto', name: 'Karthik', title: 'Chief Technology Officer', badge: 'CTO' },
-  { role: 'coo', name: 'Nishanth', title: 'Chief Operating Officer', badge: 'COO' },
-  { role: 'cfo', name: 'Dhanya', title: 'Chief Financial Officer', badge: 'CFO' },
-  { role: 'cmo', name: 'Anju Vaishnavi', title: 'Chief Marketing Officer', badge: 'CMO' },
-  { role: 'cdc', name: 'CDC Head', title: 'Career Development Center', badge: 'Reviewer' },
-  { role: 'mentor', name: 'Rohit Sir', title: 'Program Head / Mentor', badge: 'Reviewer' },
-  { role: 'admin', name: 'Sai Abhineeth', title: 'Admin / Tech Consultant', badge: 'Admin' }
-]
-
 const redirectUser = () => {
   router.push('/dashboard')
 }
@@ -327,13 +285,6 @@ const checkApprovalStatus = async () => {
     } else {
       alert('Your account is still pending administrator approval.')
     }
-  }
-}
-
-const handleDemoSelect = async (item) => {
-  const success = await authStore.demoLogin(item.role)
-  if (success) {
-    redirectUser()
   }
 }
 

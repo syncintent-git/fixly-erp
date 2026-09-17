@@ -476,7 +476,7 @@
               <input 
                 type="text" 
                 v-model="newUserForm.password"
-                placeholder="Defaults to Fixly@2026"
+                placeholder="Leave blank for system default"
                 class="w-full bg-zinc-950 border border-zinc-700 rounded p-2.5 text-white outline-none focus:border-zinc-500 font-mono"
               />
             </div>
@@ -922,7 +922,7 @@ const newUserForm = ref({
   role: 'frontend_developer',
   positionTitle: 'Frontend Developer Intern',
   accountStatus: 'ACTIVE',
-  password: 'Fixly@2026'
+  password: ''
 })
 
 const editUserForm = ref({
@@ -1133,7 +1133,7 @@ const openCreateUserModal = () => {
     role: 'frontend_developer',
     positionTitle: 'Frontend Developer Intern',
     accountStatus: 'ACTIVE',
-    password: 'Fixly@2026'
+    password: ''
   }
   showCreateUserModal.value = true
 }
