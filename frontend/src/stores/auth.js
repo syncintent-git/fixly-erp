@@ -224,12 +224,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
+  async function logout() {
     user.value = null
     permissions.value = { canAccessAdmin: false, isViewOnly: false, canManageScrum: false, isIntern: false }
     localStorage.removeItem('fixlyUser')
     localStorage.removeItem('trackerUser')
     localStorage.removeItem('fixlyPermissions')
+    try {
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Error signing out of Supabase:', error)
+    }
   }
 
   return {

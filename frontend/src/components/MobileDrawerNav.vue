@@ -311,8 +311,8 @@ const onRoleSelect = async (item) => {
   emit('close')
 }
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.logout()
   emit('close')
   router.push('/login')
 }
