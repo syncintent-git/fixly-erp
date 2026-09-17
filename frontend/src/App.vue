@@ -5,5 +5,25 @@
 </template>
 
 <script setup>
-// App.vue stays very clean in modern Vue!
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '@/supabase'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+onMounted(() => {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      console.log('Supabase user signed in')
+      // The session is typically handled in LoginView.vue or auth store, 
+      // but this global listener catches all auth state changes.
+    } else if (event === 'SIGNED_OUT') {
+      console.log('Supabase user signed out')
+      authStore.logout()
+      router.push('/login')
+    }
+  })
+})
 </script>
