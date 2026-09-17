@@ -168,6 +168,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useScrumStore } from '../../stores/scrum'
+import { getApiBase } from '../../config'
 
 const authStore = useAuthStore()
 const scrumStore = useScrumStore()
@@ -247,7 +248,7 @@ onMounted(async () => {
   await scrumStore.fetchTasks()
 
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/users/all`)
+    const res = await fetch(`${getApiBase()}/api/users/all`)
     if (res.ok) {
       const all = await res.json()
       internList.value = all.filter(u => ['frontend_developer', 'backend_developer', 'devops_developer', 'intern'].includes(u.role?.toLowerCase()))
