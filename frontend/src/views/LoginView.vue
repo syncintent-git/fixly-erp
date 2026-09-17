@@ -221,7 +221,7 @@
 
 <script setup>
 import { getApiBase } from '@/config'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { supabase } from '@/supabase'
@@ -302,23 +302,51 @@ const handleAdminLogin = async () => {
   }
 }
 
-onMounted(async () => {
-  if (authStore.user && !authStore.isPendingApproval) {
-    redirectUser()
-    return
-  }
-  
-  // Check for Supabase session after redirect
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session) {
-    const result = await authStore.processSupabaseSession(session)
-    if (result?.status === 'SUCCESS') {
-      redirectUser()
-    } else if (result?.status === 'ONBOARDING_REQUIRED') {
-      showOnboardModal.value = true
-    } else if (result?.status === 'PENDING_APPROVAL') {
-      pendingApprovalUser.value = result.data.user
+let authSubscription = null
+
+const handleSession = async (session) => {
+  if (!session || !session.access_token) return
+  const result = await authStore.processSupabaseSession(session)
+  if (result?.status === 'SUCCESS') {
+    if (window.location.hash || window.location.search) {
+      window.history.replaceState(null, '', window.location.pathname)
     }
+    redirectUser()
+  } else if (result?.status === 'ONBOARDING_REQUIRED') {
+    showOnboardModal.value = true
+  } else if (result?.status === 'PENDING_APPROVAL') {
+    pendingApprovalUser.value = result.data.user
+  }
+}
+
+onMounted(async () => {
+  if (authStore.user) {
+    if (!authStore.isPendingApproval) {
+      redirectUser()
+      return
+    } else {
+      pendingApprovalUser.value = authStore.user
+    }
+  }
+
+  // 1. Check for immediate Supabase session
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session && !authStore.user) {
+    await handleSession(session)
+  }
+
+  // 2. Listen for async OAuth redirect callback event
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session && !authStore.user) {
+      await handleSession(session)
+    }
+  })
+  authSubscription = subscription
+})
+
+onUnmounted(() => {
+  if (authSubscription) {
+    authSubscription.unsubscribe()
   }
 })
 </script>

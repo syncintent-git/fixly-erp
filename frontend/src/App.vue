@@ -14,15 +14,17 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 onMounted(() => {
-  supabase.auth.onAuthStateChange((event, session) => {
+  supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN') {
-      console.log('Supabase user signed in')
-      // The session is typically handled in LoginView.vue or auth store, 
-      // but this global listener catches all auth state changes.
+      console.log('Supabase user signed in event received')
     } else if (event === 'SIGNED_OUT') {
-      console.log('Supabase user signed out')
-      authStore.logout()
-      router.push('/login')
+      console.log('Supabase user signed out event received')
+      if (authStore.user) {
+        await authStore.logout()
+      }
+      if (router.currentRoute.value.path !== '/login') {
+        router.push('/login')
+      }
     }
   })
 })

@@ -78,6 +78,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function processSupabaseSession(session) {
+    if (!session || !session.access_token) {
+      return { status: 'ERROR', error: 'No active session token found.' }
+    }
     isLoading.value = true
     authError.value = ''
     try {
@@ -90,7 +93,13 @@ export const useAuthStore = defineStore('auth', () => {
           email: session.user?.email
         })
       })
-      const data = await res.json()
+
+      let data = {}
+      try {
+        data = await res.json()
+      } catch (e) {
+        data = { detail: `Server responded with status ${res.status}` }
+      }
 
       if (res.ok) {
         if (data.status === 'ONBOARDING_REQUIRED') {
@@ -224,16 +233,34 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  let isLoggingOut = false
   async function logout() {
-    user.value = null
-    permissions.value = { canAccessAdmin: false, isViewOnly: false, canManageScrum: false, isIntern: false }
-    localStorage.removeItem('fixlyUser')
-    localStorage.removeItem('trackerUser')
-    localStorage.removeItem('fixlyPermissions')
+    if (isLoggingOut) return
+    isLoggingOut = true
     try {
+      user.value = null
+      permissions.value = { canAccessAdmin: false, isViewOnly: false, canManageScrum: false, isIntern: false }
+      localStorage.removeItem('fixlyUser')
+      localStorage.removeItem('trackerUser')
+      localStorage.removeItem('fixlyPermissions')
+
+      // Purge any lingering Supabase auth token keys from localStorage
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i)
+          if (key && (key.startsWith('sb-') || key.includes('supabase.auth.token'))) {
+            localStorage.removeItem(key)
+          }
+        }
+      } catch (e) {
+        console.warn('Could not clear local Supabase storage keys:', e)
+      }
+
       await supabase.auth.signOut()
     } catch (error) {
       console.error('Error signing out of Supabase:', error)
+    } finally {
+      isLoggingOut = false
     }
   }
 
