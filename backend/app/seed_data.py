@@ -6,79 +6,81 @@ from sqlalchemy.orm import Session
 from . import models
 
 def migrate_sqlite_columns(engine):
-    """Safely adds missing columns to existing SQLite tables if they do not exist."""
+    """Safely adds missing columns to existing tables if they do not exist."""
+    from sqlalchemy import inspect
+    inspector = inspect(engine)
     with engine.connect() as conn:
         try:
             # 1. Check users columns
-            result = conn.execute(text("PRAGMA table_info(users)")).fetchall()
-            existing_cols = [r[1] for r in result]
-            
-            user_cols = [
-                ("email", "VARCHAR"),
-                ("position_title", "VARCHAR DEFAULT ''"),
-                ("account_status", "VARCHAR DEFAULT 'ACTIVE'"),
-                ("requested_role", "VARCHAR"),
-                ("google_id", "VARCHAR"),
-                ("avatar_url", "VARCHAR"),
-            ]
-            
-            for col_name, col_def in user_cols:
-                if col_name not in existing_cols:
-                    try:
-                        conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_def}"))
-                        conn.commit()
-                        print(f"[MIGRATED] Column users.{col_name}")
-                    except Exception as e:
-                        print(f"[NOTICE] Migrating users.{col_name}: {e}")
+            if inspector.has_table("users"):
+                existing_cols = [c["name"] for c in inspector.get_columns("users")]
+                
+                user_cols = [
+                    ("email", "VARCHAR"),
+                    ("position_title", "VARCHAR DEFAULT ''"),
+                    ("account_status", "VARCHAR DEFAULT 'ACTIVE'"),
+                    ("requested_role", "VARCHAR"),
+                    ("google_id", "VARCHAR"),
+                    ("avatar_url", "VARCHAR"),
+                ]
+                
+                for col_name, col_def in user_cols:
+                    if col_name not in existing_cols:
+                        try:
+                            conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_def}"))
+                            conn.commit()
+                            print(f"[MIGRATED] Column users.{col_name}")
+                        except Exception as e:
+                            print(f"[NOTICE] Migrating users.{col_name}: {e}")
 
             # 2. Check logs columns
-            result = conn.execute(text("PRAGMA table_info(logs)")).fetchall()
-            existing_log_cols = [r[1] for r in result]
-            log_cols = [
-                ("attendance_mode", "VARCHAR DEFAULT 'office'")
-            ]
-            for col_name, col_def in log_cols:
-                if col_name not in existing_log_cols:
-                    try:
-                        conn.execute(text(f"ALTER TABLE logs ADD COLUMN {col_name} {col_def}"))
-                        conn.commit()
-                        print(f"[MIGRATED] Column logs.{col_name}")
-                    except Exception as e:
-                        print(f"[NOTICE] Migrating logs.{col_name}: {e}")
+            if inspector.has_table("logs"):
+                existing_log_cols = [c["name"] for c in inspector.get_columns("logs")]
+                log_cols = [
+                    ("attendance_mode", "VARCHAR DEFAULT 'office'")
+                ]
+                for col_name, col_def in log_cols:
+                    if col_name not in existing_log_cols:
+                        try:
+                            conn.execute(text(f"ALTER TABLE logs ADD COLUMN {col_name} {col_def}"))
+                            conn.commit()
+                            print(f"[MIGRATED] Column logs.{col_name}")
+                        except Exception as e:
+                            print(f"[NOTICE] Migrating logs.{col_name}: {e}")
 
             # 3. Check moms columns
-            result = conn.execute(text("PRAGMA table_info(moms)")).fetchall()
-            existing_mom_cols = [r[1] for r in result]
-            mom_cols = [
-                ("title", "VARCHAR DEFAULT ''"),
-                ("team", "VARCHAR DEFAULT 'General'")
-            ]
-            for col_name, col_def in mom_cols:
-                if col_name not in existing_mom_cols:
-                    try:
-                        conn.execute(text(f"ALTER TABLE moms ADD COLUMN {col_name} {col_def}"))
-                        conn.commit()
-                        print(f"[MIGRATED] Column moms.{col_name}")
-                    except Exception as e:
-                        print(f"[NOTICE] Migrating moms.{col_name}: {e}")
+            if inspector.has_table("moms"):
+                existing_mom_cols = [c["name"] for c in inspector.get_columns("moms")]
+                mom_cols = [
+                    ("title", "VARCHAR DEFAULT ''"),
+                    ("team", "VARCHAR DEFAULT 'General'")
+                ]
+                for col_name, col_def in mom_cols:
+                    if col_name not in existing_mom_cols:
+                        try:
+                            conn.execute(text(f"ALTER TABLE moms ADD COLUMN {col_name} {col_def}"))
+                            conn.commit()
+                            print(f"[MIGRATED] Column moms.{col_name}")
+                        except Exception as e:
+                            print(f"[NOTICE] Migrating moms.{col_name}: {e}")
 
             # 4. Check teams columns
-            result = conn.execute(text("PRAGMA table_info(teams)")).fetchall()
-            existing_team_cols = [r[1] for r in result]
-            team_cols = [
-                ("description", "VARCHAR DEFAULT ''"),
-                ("lead_name", "VARCHAR DEFAULT ''"),
-                ("lead_id", "INTEGER"),
-                ("created_at", "BIGINT")
-            ]
-            for col_name, col_def in team_cols:
-                if col_name not in existing_team_cols:
-                    try:
-                        conn.execute(text(f"ALTER TABLE teams ADD COLUMN {col_name} {col_def}"))
-                        conn.commit()
-                        print(f"[MIGRATED] Column teams.{col_name}")
-                    except Exception as e:
-                        print(f"[NOTICE] Migrating teams.{col_name}: {e}")
+            if inspector.has_table("teams"):
+                existing_team_cols = [c["name"] for c in inspector.get_columns("teams")]
+                team_cols = [
+                    ("description", "VARCHAR DEFAULT ''"),
+                    ("lead_name", "VARCHAR DEFAULT ''"),
+                    ("lead_id", "INTEGER"),
+                    ("created_at", "BIGINT")
+                ]
+                for col_name, col_def in team_cols:
+                    if col_name not in existing_team_cols:
+                        try:
+                            conn.execute(text(f"ALTER TABLE teams ADD COLUMN {col_name} {col_def}"))
+                            conn.commit()
+                            print(f"[MIGRATED] Column teams.{col_name}")
+                        except Exception as e:
+                            print(f"[NOTICE] Migrating teams.{col_name}: {e}")
 
         except Exception as e:
             print(f"[ERROR] Migration check error: {e}")
