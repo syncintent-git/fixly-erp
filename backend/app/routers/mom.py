@@ -73,12 +73,12 @@ def create_mom_record(
 
     new_mom = models.MoM(
         title=title or agenda,
-        team=team or "General",
+        team=team or "All Teams",
         date=date,
         agenda=agenda,
         attendees=attendees or "",
         content=content or "",
-        created_by=created_by or "Coordinator",
+        created_by=created_by or "Unassigned",
         file_name=file_name,
         file_path=file_path
     )
@@ -95,7 +95,7 @@ def upload_or_create_mom(
     date: str = Form(...),
     agenda: Optional[str] = Form(""),
     title: Optional[str] = Form(""),
-    team: Optional[str] = Form("General"),
+    team: Optional[str] = Form("All Teams"),
     attendees: Optional[str] = Form(""),
     content: Optional[str] = Form(""),
     created_by: Optional[str] = Form(None),
@@ -106,12 +106,12 @@ def upload_or_create_mom(
     """Creates a new MoM with optional document attachment."""
     meeting_title = title or agenda or "Meeting"
     meeting_agenda = agenda or title or "Discussion"
-    creator = author_name or created_by or "Coordinator"
+    creator = author_name or created_by or "Unassigned"
     return create_mom_record(
         date=date,
         agenda=meeting_agenda,
         title=meeting_title,
-        team=team or "General",
+        team=team or "All Teams",
         attendees=attendees or "",
         content=content or "",
         created_by=creator,
@@ -125,12 +125,12 @@ def create_text_mom(mom: schemas.MoMCreateText, db: Session = Depends(get_db)):
     """Create a new MoM using manual text entry via JSON"""
     new_mom = models.MoM(
         title=mom.title or mom.agenda,
-        team=mom.team or "General",
+        team=mom.team or "All Teams",
         date=mom.date,
         agenda=mom.agenda,
         attendees=mom.attendees or "",
         content=mom.content or "",
-        created_by=mom.created_by or "Coordinator"
+        created_by=mom.created_by or "Unassigned"
     )
     db.add(new_mom)
     db.commit()

@@ -296,7 +296,10 @@
                 </div>
                 <div>
                   <h3 class="text-sm font-bold text-white">{{ t.name }}</h3>
-                  <span class="text-[10px] font-mono text-zinc-500">ID: TM-{{ t.id }}</span>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-[10px] font-mono text-zinc-500">ID: TM-{{ t.id }}</span>
+                    <span v-if="t.isLeadership" class="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold">Leadership Only</span>
+                  </div>
                 </div>
               </div>
 
@@ -713,6 +716,18 @@
             </select>
           </div>
 
+          <div class="flex items-center gap-2 p-2.5 rounded bg-zinc-950 border border-zinc-800">
+            <input 
+              type="checkbox" 
+              id="newTeamIsLeadership" 
+              v-model="newTeamForm.isLeadership" 
+              class="w-4 h-4 rounded text-orange-500 bg-zinc-900 border-zinc-700 focus:ring-0 cursor-pointer"
+            />
+            <label for="newTeamIsLeadership" class="text-xs text-zinc-300 font-medium cursor-pointer">
+              Mark as Leadership / Executive Unit (Hidden from interns & public onboarding)
+            </label>
+          </div>
+
           <div class="pt-3 border-t border-zinc-800 flex items-center justify-end gap-2.5">
             <button 
               type="button"
@@ -780,6 +795,18 @@
               <option :value="null">No lead assigned</option>
               <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }} ({{ formatRole(u.role) }})</option>
             </select>
+          </div>
+
+          <div class="flex items-center gap-2 p-2.5 rounded bg-zinc-950 border border-zinc-800">
+            <input 
+              type="checkbox" 
+              id="editTeamIsLeadership" 
+              v-model="editTeamForm.isLeadership" 
+              class="w-4 h-4 rounded text-orange-500 bg-zinc-900 border-zinc-700 focus:ring-0 cursor-pointer"
+            />
+            <label for="editTeamIsLeadership" class="text-xs text-zinc-300 font-medium cursor-pointer">
+              Mark as Leadership / Executive Unit (Hidden from interns & public onboarding)
+            </label>
           </div>
 
           <div class="pt-3 border-t border-zinc-800 flex items-center justify-end gap-2.5">
@@ -940,14 +967,16 @@ const editUserForm = ref({
 const newTeamForm = ref({
   name: '',
   description: '',
-  leadId: null
+  leadId: null,
+  isLeadership: false
 })
 
 const editTeamForm = ref({
   id: null,
   name: '',
   description: '',
-  leadId: null
+  leadId: null,
+  isLeadership: false
 })
 
 // Metrics
@@ -1248,7 +1277,8 @@ const openCreateTeamModal = () => {
   newTeamForm.value = {
     name: '',
     description: '',
-    leadId: null
+    leadId: null,
+    isLeadership: false
   }
   showCreateTeamModal.value = true
 }
@@ -1256,7 +1286,7 @@ const openCreateTeamModal = () => {
 const handleCreateTeam = async () => {
   isSubmitting.value = true
   try {
-    const res = await fetch(`${getApiBase()}/api/teams/`, {
+    const res = await fetch(`${getApiBase()}/api/teams/?user_id=${authStore.user?.id || ''}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newTeamForm.value)
@@ -1281,7 +1311,8 @@ const openEditTeamModal = (team) => {
     id: team.id,
     name: team.name,
     description: team.description || '',
-    leadId: team.leadId || null
+    leadId: team.leadId || null,
+    isLeadership: !!team.isLeadership
   }
   showEditTeamModal.value = true
 }
@@ -1289,7 +1320,7 @@ const openEditTeamModal = (team) => {
 const handleUpdateTeam = async () => {
   isSubmitting.value = true
   try {
-    const res = await fetch(`${getApiBase()}/api/teams/${editTeamForm.value.id}`, {
+    const res = await fetch(`${getApiBase()}/api/teams/${editTeamForm.value.id}?user_id=${authStore.user?.id || ''}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editTeamForm.value)
@@ -1319,7 +1350,7 @@ const handleDeleteTeam = async () => {
   if (!teamToDelete.value) return
   isSubmitting.value = true
   try {
-    const res = await fetch(`${getApiBase()}/api/teams/${teamToDelete.value.id}`, {
+    const res = await fetch(`${getApiBase()}/api/teams/${teamToDelete.value.id}?user_id=${authStore.user?.id || ''}`, {
       method: 'DELETE'
     })
     if (res.ok) {

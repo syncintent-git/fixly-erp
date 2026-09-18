@@ -71,6 +71,7 @@ def migrate_sqlite_columns(engine):
                     ("description", "VARCHAR DEFAULT ''"),
                     ("lead_name", "VARCHAR DEFAULT ''"),
                     ("lead_id", "INTEGER"),
+                    ("is_leadership", "BOOLEAN DEFAULT FALSE"),
                     ("created_at", "BIGINT")
                 ]
                 for col_name, col_def in team_cols:
@@ -86,102 +87,115 @@ def migrate_sqlite_columns(engine):
             print(f"[ERROR] Migration check error: {e}")
 
 def seed_scrum_data(db: Session):
-    """Seeds initial leadership accounts if they don't already exist. No mock data."""
-    now_ms = int(time.time() * 1000)
+    """Seeds initial leadership accounts if the database has no users or unseeded leadership."""
+    # If users already exist in production, skip running seed to protect database state
+    existing_user_count = db.query(models.User).count()
+    if existing_user_count > 0:
+        admin_exists = db.query(models.User).filter(models.User.role.in_(["admin", "ceo"])).first()
+        if admin_exists:
+            return  # Production DB already populated, skip completely
 
-    # Only real leadership accounts with real email addresses
+    default_password = os.getenv("DEFAULT_USER_PASSWORD")
+    if not default_password:
+        return
+
     predefined_users = [
         # CEO (Full Admin)
         {
-            "name": "Abhijeet",
-            "email": os.getenv("CEO_EMAIL", "abhijeetlg1@gmail.com"),
+            "name": os.getenv("CEO_NAME", "Chief Executive Officer"),
+            "email": os.getenv("CEO_EMAIL"),
             "rollNumber": "CEO-01",
             "team": "Executive",
             "role": "ceo",
             "positionTitle": "Chief Executive Officer",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
         # CTO (Full Admin)
         {
-            "name": "Karthik",
-            "email": os.getenv("CTO_EMAIL", "notmedha@gmail.com"),
+            "name": os.getenv("CTO_NAME", "Chief Technology Officer"),
+            "email": os.getenv("CTO_EMAIL"),
             "rollNumber": "CTO-01",
             "team": "Technology",
             "role": "cto",
             "positionTitle": "Chief Technology Officer",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
         # CDC (View-Only Reviewer)
         {
-            "name": "CDC Head",
-            "email": os.getenv("CDC_EMAIL", "head.cdc@hitam.org"),
+            "name": os.getenv("CDC_NAME", "CDC Head"),
+            "email": os.getenv("CDC_EMAIL"),
             "rollNumber": "CDC-01",
             "team": "Career Development",
             "role": "cdc",
             "positionTitle": "CDC Head - Career Development Center",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
         # Program Head / Mentor (View-Only Reviewer)
         {
-            "name": "Rohit Sir",
-            "email": os.getenv("MENTOR_EMAIL", "programhead.csm@hitam.org"),
+            "name": os.getenv("MENTOR_NAME", "Program Head / Mentor"),
+            "email": os.getenv("MENTOR_EMAIL"),
             "rollNumber": "PROG-HEAD",
             "team": "Academic Leadership",
             "role": "mentor",
             "positionTitle": "Program Head / Mentor",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
         # COO
         {
-            "name": "Nishanth",
-            "email": os.getenv("COO_EMAIL", "nishanth.chillumula@gmail.com"),
+            "name": os.getenv("COO_NAME", "Chief Operating Officer"),
+            "email": os.getenv("COO_EMAIL"),
             "rollNumber": "COO-01",
             "team": "Operations",
             "role": "coo",
             "positionTitle": "Chief Operating Officer",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
         # CFO
         {
-            "name": "Dhanya",
-            "email": os.getenv("CFO_EMAIL", "mamididhanyasvi@gmail.com"),
+            "name": os.getenv("CFO_NAME", "Chief Financial Officer"),
+            "email": os.getenv("CFO_EMAIL"),
             "rollNumber": "CFO-01",
             "team": "Finance",
             "role": "cfo",
             "positionTitle": "Chief Financial Officer",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
         # CMO
         {
-            "name": "Anju Vaishnavi",
-            "email": os.getenv("CMO_EMAIL", "anjuvaishnavi10@gmail.com"),
+            "name": os.getenv("CMO_NAME", "Chief Marketing Officer"),
+            "email": os.getenv("CMO_EMAIL"),
             "rollNumber": "CMO-01",
             "team": "Marketing",
             "role": "cmo",
             "positionTitle": "Chief Marketing Officer",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
         # Admin / Tech Consultant
         {
-            "name": "Sai Abhineeth",
-            "email": os.getenv("ADMIN_EMAIL", "saiabhineeth23@gmail.com"),
+            "name": os.getenv("ADMIN_NAME", "System Administrator"),
+            "email": os.getenv("ADMIN_EMAIL"),
             "rollNumber": "ADMIN-01",
             "team": "Technology",
             "role": "admin",
-            "positionTitle": "Admin / Tech Consultant",
+            "positionTitle": "System Administrator",
             "accountStatus": "ACTIVE",
-            "password": os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026")
+            "password": default_password
         },
     ]
 
+    now_ms = int(time.time() * 1000)
+    seeded_count = 0
     for u in predefined_users:
+        if not u["email"]:
+            continue
+
         existing = db.query(models.User).filter(
             (models.User.email == u["email"]) | 
             (models.User.rollNumber == u["rollNumber"])
@@ -200,14 +214,16 @@ def seed_scrum_data(db: Session):
                 password=u["password"]
             )
             db.add(new_u)
+            seeded_count += 1
         else:
-            # Update existing user role and email if needed
-            existing.email = u["email"]
-            existing.role = u["role"]
-            existing.positionTitle = u["positionTitle"]
-            existing.accountStatus = u["accountStatus"]
-            if u.get("password"):
-                existing.password = u["password"]
+            # Do NOT overwrite existing user role, email, or password!
+            # Only backfill non-sensitive empty fields
+            if not existing.positionTitle and u["positionTitle"]:
+                existing.positionTitle = u["positionTitle"]
+            if not existing.team and u["team"]:
+                existing.team = u["team"]
     
-    db.commit()
-    print("[OK] Leadership accounts seeded successfully!")
+    if seeded_count > 0:
+        db.commit()
+        print(f"[OK] Seeded {seeded_count} initial leadership accounts.")
+

@@ -91,6 +91,11 @@ def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
         pos_title = user_data.role.replace('_', ' ').title()
         
     now_ms = int(time.time() * 1000)
+    default_user_pwd = os.getenv("DEFAULT_USER_PASSWORD")
+    final_password = user_data.password or default_user_pwd
+    if not final_password:
+        raise HTTPException(status_code=400, detail="Password is required or DEFAULT_USER_PASSWORD must be configured.")
+
     new_user = models.User(
         name=user_data.name.strip(),
         email=clean_email,
@@ -99,7 +104,7 @@ def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
         role=user_data.role or "intern",
         positionTitle=pos_title or "",
         accountStatus=user_data.accountStatus or "ACTIVE",
-        password=user_data.password or os.getenv("DEFAULT_USER_PASSWORD", "Fixly@2026"),
+        password=final_password,
         createdAt=now_ms
     )
     db.add(new_user)
@@ -195,33 +200,46 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return {"message": "User deleted successfully", "id": user_id}
 
 @router.post("/admin-login")
-def admin_login(credentials: schemas.AdminLogin):
-    """Secure login for the workspace administrator and viewers"""
+def admin_login(credentials: schemas.AdminLogin, db: Session = Depends(get_db)):
+    """Authenticates workspace administrators and leadership reviewers directly against database credentials."""
+    clean_username = credentials.username.strip().lower()
+    clean_password = credentials.password
     
-    admin_pass = os.getenv("ADMIN_PASSWORD")
-    viewer_pass = os.getenv("VIEWER_PASSWORD")
-    
-    # 1. Full Admin Login
-    if credentials.username.lower() == "admin" and admin_pass and credentials.password == admin_pass:
-        return {
-            "id": 0,
-            "name": "Administrator",
-            "rollNumber": "ADMIN",
-            "team": "Management",
-            "role": "admin",
-            "createdAt": int(time.time() * 1000)
-        }
+    # Query by exact email, roll number, or role keyword
+    user = None
+    if clean_username == "admin":
+        user = db.query(models.User).filter(models.User.role.in_(["admin", "ceo"])).first()
+    elif clean_username == "viewer":
+        user = db.query(models.User).filter(models.User.role.in_(["viewer", "cdc", "mentor"])).first()
+    else:
+        user = db.query(models.User).filter(
+            (models.User.email.ilike(clean_username)) | 
+            (models.User.rollNumber.ilike(clean_username))
+        ).first()
         
-    # 2. View-Only Executive Login
-    elif credentials.username.lower() == "viewer" and viewer_pass and credentials.password == viewer_pass:
-        return {
-            "id": -1,
-            "name": "Executive",
-            "rollNumber": "VIEWER",
-            "team": "Management",
-            "role": "viewer",
-            "createdAt": int(time.time() * 1000)
-        }
+    if not user:
+        raise HTTPException(status_code=401, detail="Administrator account not found in database.")
+        
+    admin_env_pass = os.getenv("ADMIN_PASSWORD")
+    viewer_env_pass = os.getenv("VIEWER_PASSWORD")
     
-    # If the password is wrong for both, kick them out
-    raise HTTPException(status_code=401, detail="Invalid admin or viewer credentials")
+    # Verify password against database (or environment bootstrap fallback)
+    valid_db_pass = user.password and (user.password == clean_password)
+    valid_env_pass = (
+        (clean_username == "admin" and admin_env_pass and clean_password == admin_env_pass) or
+        (clean_username == "viewer" and viewer_env_pass and clean_password == viewer_env_pass)
+    )
+    
+    if not (valid_db_pass or valid_env_pass):
+        raise HTTPException(status_code=401, detail="Invalid administrator credentials.")
+        
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "rollNumber": user.rollNumber,
+        "team": user.team,
+        "role": user.role,
+        "positionTitle": user.positionTitle or ("System Administrator" if user.role == "admin" else "Executive"),
+        "createdAt": user.createdAt
+    }

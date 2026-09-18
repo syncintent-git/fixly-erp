@@ -6,15 +6,15 @@
       <div class="flex items-center gap-2">
         <img src="/logo.png" alt="Fixly" class="w-3.5 h-3.5 object-contain opacity-40 shrink-0" />
         <span class="text-zinc-500 text-[11px] sm:text-xs">
-          &copy; 2026 Fixly Services &middot; Powered by SyncIntent
+          {{ APP_COPYRIGHT }}
         </span>
       </div>
 
       <!-- Subtle Info -->
       <div class="flex items-center gap-3 text-[11px] text-zinc-600">
-        <span>Fixly Office</span>
+        <span>{{ APP_NAME }}</span>
         <span>&middot;</span>
-        <span class="font-mono">v2.4.0</span>
+        <span class="font-mono">{{ APP_VERSION }}</span>
       </div>
 
     </div>
@@ -22,4 +22,5 @@
 </template>
 
 <script setup>
+import { APP_VERSION, APP_NAME, APP_COPYRIGHT } from '../constants'
 </script>

@@ -49,7 +49,7 @@
           </div>
 
           <div class="flex items-center gap-2 text-xs text-zinc-400">
-            <span>Recorded by: <strong class="text-zinc-200">{{ mom.author_name || 'Coordinator' }}</strong></span>
+            <span>Recorded by: <strong class="text-zinc-200">{{ mom.author_name || 'Unassigned' }}</strong></span>
           </div>
         </div>
 
@@ -234,12 +234,12 @@ const submitMoM = async () => {
 
   const formData = new FormData()
   formData.append('title', newTitle.value.trim())
-  formData.append('team', newTeam.value.trim() || 'General')
+  formData.append('team', newTeam.value.trim() || 'All Teams')
   formData.append('date', newDate.value)
   formData.append('attendees', newAttendees.value.trim())
   formData.append('agenda', newAgenda.value.trim())
   formData.append('content', newContent.value)
-  formData.append('author_name', authStore.user?.name || 'Coordinator')
+  formData.append('author_name', authStore.user?.name || authStore.user?.email || 'Anonymous')
 
   if (attachedFile.value) {
     formData.append('file', attachedFile.value)

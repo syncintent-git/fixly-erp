@@ -12,16 +12,9 @@ Base.metadata.create_all(bind=engine)
 # Run non-destructive column migrations for SQLite
 migrate_sqlite_columns(engine)
 
-# Pre-populate default teams and Scrum seed data
+# Initialize leadership accounts if unseeded
 db = SessionLocal()
 try:
-    if db.query(Team).count() == 0:
-        default_teams = ["Mobile Application Development Team", "DevOps Team"]
-        for team_name in default_teams:
-            db.add(Team(name=team_name))
-        db.commit()
-    
-    # Initialize leadership accounts
     seed_scrum_data(db)
 except Exception as e:
     print(f"[WARNING] Database initialization notice: {e}")

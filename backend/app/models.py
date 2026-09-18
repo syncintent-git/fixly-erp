@@ -174,5 +174,6 @@ class Team(Base):
     description = Column(String, default="", nullable=True)
     lead_name = Column("lead_name", String, default="", nullable=True)
     lead_id = Column("lead_id", Integer, nullable=True)
+    is_leadership = Column("is_leadership", Boolean, default=False)
     createdAt = Column("created_at", BigInteger, nullable=True)
 

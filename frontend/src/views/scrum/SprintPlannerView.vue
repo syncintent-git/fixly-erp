@@ -71,7 +71,7 @@
 
         <div class="flex flex-wrap items-center justify-between gap-4 pt-2 text-xs text-zinc-400 border-t border-zinc-800">
           <div>
-            <span>Scrum Lead: <strong class="text-zinc-200">{{ sprint.scrumHeadName || 'Rahul Sharma' }}</strong></span>
+            <span>Scrum Lead: <strong class="text-zinc-200">{{ sprint.scrumHeadName || 'Unassigned' }}</strong></span>
           </div>
           <div>
             <span>Created: <strong class="text-zinc-200 font-mono">{{ sprint.startDate }}</strong></span>
@@ -213,7 +213,7 @@ const handleCreateSprint = async () => {
     startDate: newSprintStart.value,
     endDate: endStr,
     goals: newSprintGoals.value.trim(),
-    scrumHeadName: authStore.user?.name || 'Rahul Sharma'
+    scrumHeadName: authStore.user?.name || 'Unassigned'
   }, authStore.user?.id)
 
   newSprintName.value = ''

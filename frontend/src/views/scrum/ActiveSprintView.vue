@@ -8,12 +8,12 @@
           <div class="flex flex-wrap items-center gap-2 mb-1.5 text-xs text-zinc-400 font-mono">
             <span>Cycle: {{ activeSprint?.startDate }} — {{ activeSprint?.endDate }}</span>
             <span>•</span>
-            <span>Scrum Lead: <strong class="text-zinc-200">{{ activeSprint?.scrumHeadName || 'Rahul Sharma' }}</strong></span>
+            <span>Scrum Lead: <strong class="text-zinc-200">{{ activeSprint?.scrumHeadName || 'Unassigned' }}</strong></span>
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              {{ activeSprint ? activeSprint.name : 'Sprint 07 - Core Execution' }}
+              {{ activeSprint ? activeSprint.name : 'No Active Sprint' }}
             </h1>
             <select 
               v-if="scrumStore.sprints.length > 1"

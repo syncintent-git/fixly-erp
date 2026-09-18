@@ -65,6 +65,7 @@
               <option value="frontend_developer">Frontend Developer Intern</option>
               <option value="backend_developer">Backend Developer Intern</option>
               <option value="devops_developer">DevOps Developer Intern</option>
+              <option value="intern">Engineering Intern</option>
               <option value="scrum_head">Scrum Head</option>
             </select>
           </div>
@@ -75,9 +76,10 @@
               v-model="user.assignedTeam"
               :disabled="authStore.isViewOnly"
               class="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-xs text-white focus:border-zinc-500 outline-none cursor-pointer">
-              <option value="Mobile Application Development">Mobile Application Development</option>
-              <option value="DevOps">DevOps & Cloud</option>
-              <option value="Management">Management</option>
+              <option value="">-- Select Team / Department --</option>
+              <option v-for="team in dbTeams" :key="team.id || team.name" :value="team.name">
+                {{ team.name }}
+              </option>
             </select>
           </div>
 
@@ -114,28 +116,27 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useScrumStore } from '../../stores/scrum'
+import { formatRoleTitle } from '../../constants'
+import { getApiBase } from '../../config'
 
 const authStore = useAuthStore()
 const scrumStore = useScrumStore()
+const dbTeams = ref([])
 
 const pendingUsers = computed(() => {
   return scrumStore.pendingUsers.map(u => ({
     ...u,
-    approvedRole: u.requestedRole || 'frontend_developer',
-    assignedTeam: u.requestedRole === 'devops_developer' ? 'DevOps' : 'Mobile Application Development',
-    positionTitle: u.positionTitle || `${formatRole(u.requestedRole || 'frontend_developer')} Intern`
+    approvedRole: u.requestedRole || 'intern',
+    assignedTeam: u.team || '',
+    positionTitle: u.positionTitle || formatRoleTitle(u.requestedRole || 'intern')
   }))
 })
 
 const formatRole = (role) => {
-  if (!role) return 'Frontend Developer'
-  if (role === 'frontend_developer') return 'Frontend Developer'
-  if (role === 'backend_developer') return 'Backend Developer'
-  if (role === 'devops_developer') return 'DevOps Developer'
-  return role.replace('_', ' ')
+  return formatRoleTitle(role)
 }
 
 const handleApprove = async (user) => {
@@ -152,7 +153,15 @@ const handleReject = async (user) => {
   await scrumStore.fetchPendingUsers()
 }
 
-onMounted(() => {
+onMounted(async () => {
   scrumStore.fetchPendingUsers()
+  try {
+    const res = await fetch(`${getApiBase()}/api/teams`)
+    if (res.ok) {
+      dbTeams.value = await res.json()
+    }
+  } catch (err) {
+    console.error('Failed to load teams:', err)
+  }
 })
 </script>

@@ -28,7 +28,7 @@
     <!-- Track Filter Tabs -->
     <div class="flex space-x-2 overflow-x-auto pb-1 w-full">
       <button 
-        v-for="track in ['ALL', 'Frontend', 'Backend', 'DevOps']"
+        v-for="track in availableTracks"
         :key="track"
         @click="selectedTrack = track"
         :class="[
@@ -37,7 +37,7 @@
             ? 'bg-orange-500 text-black border-orange-400 font-bold shadow-sm' 
             : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850 hover:text-white'
         ]">
-        {{ track === 'ALL' ? 'All Tracks' : `${track} Engineering` }}
+        {{ track === 'ALL' ? 'All Tracks' : (track.toLowerCase().includes('team') || track.toLowerCase().includes('engineering') || track.toLowerCase().includes('development') ? track : `${track} Engineering`) }}
       </button>
     </div>
 
@@ -187,10 +187,31 @@ const canAssign = computed(() => {
   return authStore.canManageScrum || authStore.canAccessAdmin
 })
 
+const dbTeams = ref([])
+
+const availableTracks = computed(() => {
+  const tracks = new Set()
+  // Add active workforce teams from database
+  dbTeams.value.forEach(t => {
+    if (!t.isLeadership) tracks.add(t.name)
+  })
+  internList.value.forEach(u => {
+    if (u.team) {
+      tracks.add(u.team)
+    } else if (u.role) {
+      tracks.add(formatRole(u.role))
+    }
+  })
+  return ['ALL', ...Array.from(tracks)]
+})
+
 const filteredInterns = computed(() => {
   if (selectedTrack.value === 'ALL') return internList.value
   const t = selectedTrack.value.toLowerCase()
-  return internList.value.filter(u => (u.role || '').toLowerCase().includes(t))
+  return internList.value.filter(u => 
+    (u.role || '').toLowerCase().includes(t) || 
+    (u.team || '').toLowerCase().includes(t)
+  )
 })
 
 const getInternTasks = (internId, status = null) => {
@@ -244,20 +265,16 @@ const handleCreateTask = async () => {
 }
 
 onMounted(async () => {
-  await scrumStore.fetchStories()
-  await scrumStore.fetchTasks()
-
-  try {
-    const res = await fetch(`${getApiBase()}/api/users/all`)
-    if (res.ok) {
-      const all = await res.json()
+  await Promise.allSettled([
+    scrumStore.fetchStories(),
+    scrumStore.fetchTasks(),
+    fetch(`${getApiBase()}/api/teams?user_role=${authStore.user?.role || ''}`).then(r => r.ok ? r.json() : []).then(d => { dbTeams.value = d }),
+    fetch(`${getApiBase()}/api/users/all`).then(r => r.ok ? r.json() : []).then(all => {
       internList.value = all.filter(u => ['frontend_developer', 'backend_developer', 'devops_developer', 'intern'].includes(u.role?.toLowerCase()))
       if (internList.value.length > 0 && !assignInternId.value) {
         assignInternId.value = internList.value[0].id
       }
-    }
-  } catch (err) {
-    console.error('Error fetching interns:', err)
-  }
+    })
+  ])
 })
 </script>

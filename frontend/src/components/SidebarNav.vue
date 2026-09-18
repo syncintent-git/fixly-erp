@@ -138,9 +138,9 @@
         <div class="flex items-center justify-between px-1 text-[10px] text-zinc-500">
           <div class="flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity">
             <img src="/logo.png" alt="Fixly" class="w-3.5 h-3.5 object-contain" />
-            <span class="font-semibold text-zinc-400">Fixly Office</span>
+            <span class="font-semibold text-zinc-400">{{ APP_NAME }}</span>
           </div>
-          <span class="font-mono text-[9px] text-zinc-600">v2.4.0</span>
+          <span class="font-mono text-[9px] text-zinc-600">{{ APP_VERSION }}</span>
         </div>
       </template>
 
@@ -151,7 +151,7 @@
           class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-orange-400 font-bold text-xs shadow-inner cursor-default hover:border-orange-500/40 transition-colors">
           {{ userInitials }}
         </div>
-        <div class="flex justify-center pt-1" title="Fixly Office v2.4.0">
+        <div class="flex justify-center pt-1" :title="`${APP_NAME} ${APP_VERSION}`">
           <img src="/logo.png" alt="Fixly" class="w-4 h-4 object-contain opacity-70 hover:opacity-100 transition-opacity" />
         </div>
       </template>
@@ -165,6 +165,7 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useScrumStore } from '../stores/scrum'
+import { APP_VERSION, APP_NAME } from '../constants'
 
 const props = defineProps({
   isPinned: {

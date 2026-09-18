@@ -79,7 +79,7 @@ def create_sprint(sprint_in: schemas.SprintCreate, user_id: Optional[int] = None
     start_dt = datetime.strptime(sprint_in.startDate, "%Y-%m-%d")
     end_date = sprint_in.endDate or (start_dt + timedelta(days=duration)).strftime("%Y-%m-%d")
 
-    scrum_head_name = "Rahul Sharma"
+    scrum_head_name = None
     if sprint_in.scrumHeadId:
         head_user = db.query(models.User).filter(models.User.id == sprint_in.scrumHeadId).first()
         if head_user:
@@ -350,13 +350,18 @@ def create_task(task_in: schemas.TaskCreate, user_id: Optional[int] = None, db: 
 
     # Notify intern if assigned
     if task_in.assignedToId:
+        creator_name = "Scrum Lead"
+        if user_id:
+            creator_user = db.query(models.User).filter(models.User.id == user_id).first()
+            if creator_user:
+                creator_name = creator_user.name
         db.add(models.Notification(
             recipientId=task_in.assignedToId,
             senderId=user_id,
-            senderName="Scrum Head",
+            senderName=creator_name,
             title=f"New Task Assigned: {new_task.taskId}",
             message=f"You have been assigned to '{new_task.title}' under story {story.storyId}.",
-            link="/intern",
+            link="/scrum/active-sprint",
             isRead=False,
             createdAt=now_ms
         ))
@@ -415,7 +420,7 @@ def submit_task_for_approval(task_id: int, submit_in: schemas.TaskSubmit, user_i
             senderName=task.assignedToName,
             title=f"Work Submitted for Approval: {task.taskId}",
             message=f"{task.assignedToName} submitted '{task.title}' for review.",
-            link="/admin",
+            link="/scrum/reviews",
             isRead=False,
             createdAt=now_ms
         ))
@@ -474,7 +479,7 @@ def review_task(task_id: int, review_in: schemas.TaskReview, reviewer_id: int, d
                 senderName=reviewer_name,
                 title=f"Task Approved: {task.taskId}",
                 message=f"Your work on '{task.title}' was approved by {reviewer_name}!",
-                link="/intern",
+                link="/scrum/active-sprint",
                 isRead=False,
                 createdAt=now_ms
             ))
@@ -507,7 +512,7 @@ def review_task(task_id: int, review_in: schemas.TaskReview, reviewer_id: int, d
                 senderName=reviewer_name,
                 title=f"Changes Requested: {task.taskId}",
                 message=f"{reviewer_name} requested rework: '{review_in.feedback}'. Task returned to In Progress.",
-                link="/intern",
+                link="/scrum/active-sprint",
                 isRead=False,
                 createdAt=now_ms
             ))
@@ -575,14 +580,19 @@ def approve_user_account(user_id: int, approve_in: schemas.UserApproveRequest, r
         user.positionTitle = f"{user.role.replace('_', ' ').title()} Intern"
 
     now_ms = int(time.time() * 1000)
+    admin_name = "Fixly Administration"
+    if reviewer_id:
+        rev_user = db.query(models.User).filter(models.User.id == reviewer_id).first()
+        if rev_user:
+            admin_name = rev_user.name
     # Notify the user
     db.add(models.Notification(
         recipientId=user.id,
         senderId=reviewer_id,
-        senderName="System Administration",
+        senderName=admin_name,
         title="Account Approved",
         message="Your account registration has been approved! You now have full access to your assigned 14-day sprint tasks.",
-        link="/intern",
+        link="/dashboard",
         isRead=False,
         createdAt=now_ms
     ))

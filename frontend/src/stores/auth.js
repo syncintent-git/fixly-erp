@@ -2,6 +2,7 @@ import { getApiBase } from '@/config'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/supabase'
+import { ROLE_PERMISSIONS } from '../constants'
 
 
 export const useAuthStore = defineStore('auth', () => {
@@ -21,25 +22,25 @@ export const useAuthStore = defineStore('auth', () => {
   const canAccessAdmin = computed(() => {
     if (!user.value) return false
     const r = (user.value.role || '').toLowerCase()
-    return ['admin', 'ceo', 'cto', 'mentor', 'cdc', 'coo', 'cfo', 'cmo', 'viewer'].includes(r)
+    return ROLE_PERMISSIONS.ADMIN_ROLES.includes(r)
   })
 
   const isViewOnly = computed(() => {
     if (!user.value) return false
     const r = (user.value.role || '').toLowerCase()
-    return ['cdc', 'mentor', 'viewer', 'cfo', 'cmo'].includes(r)
+    return ROLE_PERMISSIONS.VIEW_ONLY_ROLES.includes(r)
   })
 
   const canManageScrum = computed(() => {
     if (!user.value) return false
     const r = (user.value.role || '').toLowerCase()
-    return ['scrum_head', 'admin', 'ceo', 'cto', 'coo'].includes(r)
+    return ROLE_PERMISSIONS.SCRUM_MANAGE_ROLES.includes(r)
   })
 
   const isIntern = computed(() => {
     if (!user.value) return false
     const r = (user.value.role || '').toLowerCase()
-    return ['frontend_developer', 'backend_developer', 'devops_developer', 'intern', 'student', 'user'].includes(r)
+    return ROLE_PERMISSIONS.INTERN_ROLES.includes(r)
   })
 
   const isPendingApproval = computed(() => {
@@ -128,14 +129,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 2. Onboard Intern Role
-  async function onboardRole(name, email, requestedRole) {
+  async function onboardRole(name, email, requestedRole, team = '') {
     isLoading.value = true
     authError.value = ''
     try {
       const res = await fetch(`${getApiBase()}/api/auth/onboard-role`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, requestedRole })
+        body: JSON.stringify({ name, email, requestedRole, team })
       })
       const data = await res.json()
       if (res.ok) {
@@ -219,10 +220,18 @@ export const useAuthStore = defineStore('auth', () => {
       })
       if (res.ok) {
         const data = await res.json()
-        setSession(data, { canAccessAdmin: true, isViewOnly: data.role === 'viewer', canManageScrum: true, isIntern: false })
+        const role = (data.role || '').toLowerCase()
+        const isView = ['viewer', 'cdc', 'mentor', 'cfo', 'cmo'].includes(role)
+        setSession(data, { 
+          canAccessAdmin: true, 
+          isViewOnly: isView, 
+          canManageScrum: !isView, 
+          isIntern: false 
+        })
         return true
       } else {
-        authError.value = 'Invalid administrator credentials.'
+        const errData = await res.json().catch(() => ({}))
+        authError.value = errData.detail || 'Invalid administrator credentials.'
         return false
       }
     } catch (err) {

@@ -332,12 +332,14 @@ class TeamCreate(BaseModel):
     description: Optional[str] = ""
     leadId: Optional[int] = None
     leadName: Optional[str] = None
+    isLeadership: Optional[bool] = False
 
 class TeamUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     leadId: Optional[int] = None
     leadName: Optional[str] = None
+    isLeadership: Optional[bool] = None
 
 class TeamResponse(BaseModel):
     id: int
@@ -345,6 +347,7 @@ class TeamResponse(BaseModel):
     description: Optional[str] = ""
     leadId: Optional[int] = None
     leadName: Optional[str] = None
+    isLeadership: Optional[bool] = False
     memberCount: Optional[int] = 0
 
     model_config = {"from_attributes": True}

@@ -160,48 +160,66 @@
         <div class="mt-6 pt-4 border-t border-zinc-800 text-center text-xs text-zinc-500 flex items-center justify-between">
           <div class="flex items-center gap-1.5">
             <img src="/logo.png" alt="Fixly" class="w-3.5 h-3.5 object-contain opacity-60" />
-            <span>Fixly Enterprise Office</span>
+            <span>{{ APP_FULL_NAME }}</span>
           </div>
-          <span class="font-mono text-[10px]">v2.4.0</span>
+          <span class="font-mono text-[10px]">{{ APP_VERSION }}</span>
         </div>
 
       </div>
     </div>
 
     <!-- Applicant Onboarding Modal -->
-    <div v-if="showOnboardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-      <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6 max-w-md w-full shadow-xl space-y-4">
+    <div v-if="showOnboardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
         <div class="pb-3 border-b border-zinc-800 flex items-center gap-3">
           <img src="/logo.png" alt="Fixly" class="w-8 h-8 object-contain shrink-0" />
           <div>
-            <h3 class="text-base font-bold text-white">Select Your Intern Track</h3>
-            <p class="text-xs text-zinc-400 mt-0.5">Welcome, {{ authStore.onboardingName }}. Select your engineering track to complete registration.</p>
+            <h3 class="text-base font-bold text-white">Select Department & Role</h3>
+            <p class="text-xs text-zinc-400 mt-0.5">Welcome, {{ authStore.onboardingName }}. Select your department and engineering track to complete registration.</p>
           </div>
         </div>
 
-        <div class="space-y-2">
-          <label 
-            v-for="track in INTERN_TRACKS"
-            :key="track.id"
-            :class="[
-              'block p-3 rounded border text-xs cursor-pointer transition-colors',
-              selectedTrack === track.id ? 'bg-orange-500/10 border-orange-500/40 text-white font-semibold' : 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700'
-            ]">
-            <input type="radio" :value="track.id" v-model="selectedTrack" class="sr-only" />
-            <div class="font-semibold">{{ track.title }}</div>
-            <div class="text-[11px] text-zinc-400 mt-0.5">{{ track.description }}</div>
-          </label>
+        <!-- Dynamic Department Selection from Database -->
+        <div>
+          <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Department</label>
+          <select 
+            v-model="selectedTeam"
+            class="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2.5 text-xs text-white focus:border-orange-500 outline-none cursor-pointer">
+            <option v-if="dbTeams.length === 0" value="">Loading departments...</option>
+            <option v-for="team in dbTeams" :key="team.id || team.name" :value="team.name">
+              {{ team.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Track / Role Selection -->
+        <div>
+          <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Engineering Track</label>
+          <div class="space-y-2">
+            <label 
+              v-for="track in INTERN_TRACKS"
+              :key="track.id"
+              :class="[
+                'block p-3 rounded-lg border text-xs cursor-pointer transition-colors',
+                selectedTrack === track.id ? 'bg-orange-500/10 border-orange-500/40 text-white font-semibold' : 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+              ]">
+              <input type="radio" :value="track.id" v-model="selectedTrack" class="sr-only" />
+              <div class="font-semibold">{{ track.title }}</div>
+              <div class="text-[11px] text-zinc-400 mt-0.5">{{ track.description }}</div>
+            </label>
+          </div>
         </div>
 
         <div class="pt-2 flex items-center justify-end gap-2.5">
           <button 
             @click="showOnboardModal = false"
-            class="px-3 py-1.5 rounded text-xs text-zinc-400 hover:text-white">
+            class="px-3 py-1.5 rounded text-xs text-zinc-400 hover:text-white cursor-pointer">
             Cancel
           </button>
           <button 
             @click="submitOnboarding"
-            class="bg-orange-500 hover:bg-orange-400 text-black font-bold px-4 py-2 rounded text-xs cursor-pointer">
+            :disabled="!selectedTeam && dbTeams.length > 0"
+            class="bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-black font-bold px-4 py-2 rounded-lg text-xs cursor-pointer transition-colors shadow-sm">
             Submit for Admin Approval
           </button>
         </div>
@@ -212,7 +230,7 @@
     <footer class="fixed bottom-0 left-0 right-0 py-2.5 px-4 text-zinc-500 text-xs border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-sm z-20">
       <div class="max-w-6xl mx-auto flex items-center justify-center gap-2 text-zinc-500">
         <img src="/logo.png" alt="Fixly" class="w-3.5 h-3.5 object-contain opacity-40" />
-        <span class="text-[11px]">&copy; 2026 Fixly Services &middot; Powered by SyncIntent</span>
+        <span class="text-[11px]">{{ APP_COPYRIGHT }}</span>
       </div>
     </footer>
 
@@ -225,6 +243,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { supabase } from '@/supabase'
+import { APP_VERSION, APP_FULL_NAME, APP_COPYRIGHT, INTERN_TRACKS } from '@/constants'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -242,12 +261,22 @@ const adminPass = ref('')
 
 const showOnboardModal = ref(false)
 const selectedTrack = ref('frontend_developer')
+const selectedTeam = ref('')
+const dbTeams = ref([])
 
-const INTERN_TRACKS = [
-  { id: 'frontend_developer', title: 'Frontend Developer Intern', description: 'Vue 3, Tailwind CSS, UI/UX Components' },
-  { id: 'backend_developer', title: 'Backend Developer Intern', description: 'FastAPI, Python, SQLAlchemy, REST APIs' },
-  { id: 'devops_developer', title: 'DevOps Developer Intern', description: 'CI/CD, Docker, Cloud Deployments, Health Monitoring' }
-]
+const fetchOnboardingTeams = async () => {
+  try {
+    const res = await fetch(`${getApiBase()}/api/teams?for_onboarding=true`)
+    if (res.ok) {
+      dbTeams.value = await res.json()
+      if (dbTeams.value.length > 0 && !selectedTeam.value) {
+        selectedTeam.value = dbTeams.value[0].name
+      }
+    }
+  } catch (err) {
+    console.warn('Could not fetch onboarding teams:', err)
+  }
+}
 
 const redirectUser = () => {
   router.push('/dashboard')
@@ -257,12 +286,12 @@ const triggerGoogleSignInPrompt = async () => {
   await authStore.initiateGoogleLogin()
 }
 
-
 const submitOnboarding = async () => {
   const result = await authStore.onboardRole(
     authStore.onboardingName,
     authStore.onboardingEmail,
-    selectedTrack.value
+    selectedTrack.value,
+    selectedTeam.value
   )
   showOnboardModal.value = false
   if (result?.status === 'PENDING_APPROVAL') {
@@ -320,6 +349,8 @@ const handleSession = async (session) => {
 }
 
 onMounted(async () => {
+  fetchOnboardingTeams()
+
   if (authStore.user) {
     if (!authStore.isPendingApproval) {
       redirectUser()

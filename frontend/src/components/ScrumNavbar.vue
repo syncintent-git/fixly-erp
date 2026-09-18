@@ -223,6 +223,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useScrumStore } from '../stores/scrum'
 import { useThemeStore } from '../stores/theme'
+import { formatRoleTitle } from '../constants'
 
 const router = useRouter()
 const route = useRoute()
@@ -243,21 +244,7 @@ let pollTimer = null
 const roleDisplayTitle = computed(() => {
   const u = authStore.user
   if (!u) return 'Guest'
-  if (u.positionTitle) return u.positionTitle
-  const r = (u.role || '').toLowerCase()
-  if (r === 'ceo') return 'Chief Executive Officer'
-  if (r === 'cto') return 'Chief Technology Officer'
-  if (r === 'coo') return 'Chief Operating Officer'
-  if (r === 'cfo') return 'Chief Financial Officer'
-  if (r === 'cmo') return 'Chief Marketing Officer'
-  if (r === 'cdc') return 'CDC Head'
-  if (r === 'mentor') return 'Program Head / Mentor'
-  if (r === 'scrum_head') return 'Scrum Head'
-  if (r === 'frontend_developer') return 'Frontend Intern'
-  if (r === 'backend_developer') return 'Backend Intern'
-  if (r === 'devops_developer') return 'DevOps Intern'
-  if (r === 'admin') return 'System Administrator'
-  return u.name
+  return formatRoleTitle(u.role, u.positionTitle)
 })
 
 const toggleNotifications = () => {

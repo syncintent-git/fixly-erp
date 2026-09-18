@@ -562,23 +562,20 @@
           </div>
 
           <!-- Department Cards Strip -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-center">
-              <span class="text-[10px] font-mono uppercase text-zinc-500">Engineering</span>
-              <p class="text-lg font-black text-orange-400 mt-0.5 font-mono">{{ countByTeam('Engineering') }}</p>
+          <!-- Team Pulse Cards -->
+          <div v-if="allTeams.length > 0" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div 
+              v-for="(t, idx) in allTeams.slice(0, 4)" 
+              :key="t.id || t.name"
+              class="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-center">
+              <span class="text-[10px] font-mono uppercase text-zinc-500 truncate block">{{ t.name }}</span>
+              <p :class="['text-lg font-black mt-0.5 font-mono', idx === 0 ? 'text-orange-400' : 'text-white']">
+                {{ countByTeam(t.name) }}
+              </p>
             </div>
-            <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-center">
-              <span class="text-[10px] font-mono uppercase text-zinc-500">Frontend</span>
-              <p class="text-lg font-black text-white mt-0.5 font-mono">{{ countByTeam('Frontend') }}</p>
-            </div>
-            <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-center">
-              <span class="text-[10px] font-mono uppercase text-zinc-500">Backend</span>
-              <p class="text-lg font-black text-white mt-0.5 font-mono">{{ countByTeam('Backend') }}</p>
-            </div>
-            <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-center">
-              <span class="text-[10px] font-mono uppercase text-zinc-500">DevOps</span>
-              <p class="text-lg font-black text-white mt-0.5 font-mono">{{ countByTeam('DevOps') }}</p>
-            </div>
+          </div>
+          <div v-else class="p-4 bg-zinc-950 rounded border border-zinc-800 text-center text-xs text-zinc-500">
+            No departments configured. Add teams in Admin &gt; Users &amp; Teams.
           </div>
 
           <!-- Feed Teaser -->
@@ -661,6 +658,7 @@ import { getApiBase } from '@/config'
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useScrumStore } from '../stores/scrum'
+import { formatRoleTitle } from '../constants'
 
 const authStore = useAuthStore()
 const scrumStore = useScrumStore()
@@ -694,21 +692,7 @@ const isExecutive = computed(() => !isIntern.value && !isScrumHead.value && !isA
 const currentRoleBadge = computed(() => {
   const u = authStore.user
   if (!u) return 'Guest'
-  if (u.positionTitle) return u.positionTitle
-  const r = (u.role || '').toLowerCase()
-  if (r === 'ceo') return 'Chief Executive Officer'
-  if (r === 'cto') return 'Chief Technology Officer'
-  if (r === 'coo') return 'Chief Operating Officer'
-  if (r === 'cfo') return 'Chief Financial Officer'
-  if (r === 'cmo') return 'Chief Marketing Officer'
-  if (r === 'cdc') return 'CDC Head'
-  if (r === 'mentor') return 'Program Head / Mentor'
-  if (r === 'scrum_head') return 'Lead Scrum Head'
-  if (r === 'frontend_developer') return 'Frontend Intern'
-  if (r === 'backend_developer') return 'Backend Intern'
-  if (r === 'devops_developer') return 'DevOps Intern'
-  if (r === 'admin') return 'System Administrator'
-  return u.role.toUpperCase()
+  return formatRoleTitle(u.role, u.positionTitle)
 })
 
 const greetingText = computed(() => {
@@ -789,7 +773,12 @@ const getInternTaskCount = (internId) => {
 }
 
 const countByTeam = (teamName) => {
-  return todayLogs.value.filter(l => (l.team || '').toLowerCase().includes(teamName.toLowerCase())).length
+  const target = (teamName || '').toLowerCase().trim()
+  if (!target) return 0
+  return todayLogs.value.filter(l => {
+    const userTeam = (l.team || '').toLowerCase().trim()
+    return userTeam === target || userTeam.includes(target) || target.includes(userTeam)
+  }).length
 }
 
 // 4 High-Signal KPIs per Role
@@ -821,7 +810,7 @@ const kpi1 = computed(() => {
     }
   }
   // Executive
-  const rate = allUsers.value.length > 0 ? Math.round((todayLogs.value.length / allUsers.value.length) * 100) : 85
+  const rate = allUsers.value.length > 0 ? Math.round((todayLogs.value.length / allUsers.value.length) * 100) : 0
   return {
     label: 'Attendance Compliance',
     value: `${rate}%`,
@@ -888,7 +877,7 @@ const kpi3 = computed(() => {
   if (isAdmin.value) {
     return {
       label: 'Teams & Departments',
-      value: allTeams.value.length || 9,
+      value: allTeams.value.length,
       subtext: 'Functional org units',
       icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>'
     }
@@ -931,8 +920,8 @@ const kpi4 = computed(() => {
   // Executive
   return {
     label: 'Cycle Duration',
-    value: scrumStore.activeSprint?.durationDays ? `${scrumStore.activeSprint.durationDays} Days` : '14 Days',
-    subtext: `${scrumStore.activeSprint?.name || 'Sprint'} cadence on track`,
+    value: scrumStore.activeSprint?.durationDays ? `${scrumStore.activeSprint.durationDays} Days` : (scrumStore.activeSprint ? 'Active' : 'Unscheduled'),
+    subtext: scrumStore.activeSprint ? `${scrumStore.activeSprint.name} cadence` : 'Sprint cycle not configured',
     icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>'
   }
 })
@@ -954,7 +943,7 @@ const quickApproveUser = async (user) => {
   try {
     await scrumStore.approveUser(user.id, {
       role: user.requestedRole || 'intern',
-      team: 'Engineering'
+      team: user.team || (allTeams.value.length > 0 ? allTeams.value[0].name : '')
     }, authStore.user?.id)
   } catch (err) {
     console.error('Error approving user:', err)
@@ -989,6 +978,7 @@ const formatTime = (ts) => {
 
 // Fetch Initial Data
 onMounted(async () => {
+  const roleParam = authStore.user?.role ? `?user_role=${encodeURIComponent(authStore.user.role)}` : ''
   await Promise.allSettled([
     scrumStore.fetchSprints(),
     scrumStore.fetchTasks(),
@@ -997,7 +987,7 @@ onMounted(async () => {
     scrumStore.fetchAuditLogs(),
     fetch(`${getApiBase()}/api/logs`).then(r => r.ok ? r.json() : []).then(d => { allLogs.value = d }),
     fetch(`${getApiBase()}/api/users`).then(r => r.ok ? r.json() : []).then(d => { allUsers.value = d }),
-    fetch(`${getApiBase()}/api/teams`).then(r => r.ok ? r.json() : []).then(d => { allTeams.value = d })
+    fetch(`${getApiBase()}/api/teams${roleParam}`).then(r => r.ok ? r.json() : []).then(d => { allTeams.value = d })
   ])
 })
 </script>

@@ -114,26 +114,39 @@ def onboard_intern_role(payload: schemas.OnboardRoleRequest, db: Session = Depen
             "permissions": get_user_permissions(existing)
         }
 
-    allowed_tracks = {
-        "frontend_developer": ("Frontend Developer Intern", "Mobile Application Development"),
-        "backend_developer": ("Backend Developer Intern", "Mobile Application Development"),
-        "devops_developer": ("DevOps Developer Intern", "DevOps")
+    # Check if team is specified and valid from database
+    assigned_team = ""
+    if payload.team:
+        db_team = db.query(models.Team).filter(models.Team.name.ilike(payload.team.strip())).first()
+        if db_team:
+            assigned_team = db_team.name
+
+    # Determine position title dynamically
+    role_titles = {
+        "frontend_developer": "Frontend Developer Intern",
+        "backend_developer": "Backend Developer Intern",
+        "devops_developer": "DevOps Developer Intern",
+        "intern": "Engineering Intern",
+        "scrum_head": "Scrum Head"
     }
+    
+    clean_role = (payload.requestedRole or "intern").strip().lower()
+    pos_title = role_titles.get(clean_role, clean_role.replace("_", " ").title())
+    if assigned_team and "Intern" in pos_title:
+        pos_title = f"{pos_title} ({assigned_team})"
 
-    if payload.requestedRole not in allowed_tracks:
-        raise HTTPException(status_code=400, detail="Invalid role. Must be frontend_developer, backend_developer, or devops_developer.")
-
-    pos_title, default_team = allowed_tracks[payload.requestedRole]
     now_ms = int(time.time() * 1000)
-    roll_no = f"FX-APP-{int(time.time()) % 10000}"
+    # Generate unique application identifier
+    user_count = db.query(models.User).count()
+    roll_no = f"FX-{user_count + 1001}"
 
     new_user = models.User(
-        name=payload.name,
+        name=payload.name.strip(),
         email=clean_email,
         rollNumber=roll_no,
-        team=payload.team or default_team,
-        role=payload.requestedRole,
-        requestedRole=payload.requestedRole,
+        team=assigned_team,
+        role=clean_role,
+        requestedRole=clean_role,
         positionTitle=pos_title,
         accountStatus="PENDING_APPROVAL", # Admin must approve before access
         createdAt=now_ms
@@ -151,7 +164,7 @@ def onboard_intern_role(payload: schemas.OnboardRoleRequest, db: Session = Depen
             senderName=new_user.name,
             title="New User Registration Approval",
             message=f"{new_user.name} ({clean_email}) requested access as {pos_title}.",
-            link="/admin",
+            link="/admin/access-requests",
             isRead=False,
             createdAt=now_ms
         ))

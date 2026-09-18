@@ -16,14 +16,29 @@ def team_to_response(team: models.Team, db: Session) -> dict:
         "description": team.description or "",
         "leadId": team.lead_id,
         "leadName": team.lead_name or "",
+        "isLeadership": bool(getattr(team, "is_leadership", False)),
         "memberCount": count
     }
 
 @router.get("", response_model=List[schemas.TeamResponse])
 @router.get("/", response_model=List[schemas.TeamResponse])
-def get_teams(db: Session = Depends(get_db)):
-    """Fetches all teams with dynamic member counts."""
-    teams = db.query(models.Team).order_by(models.Team.name.asc()).all()
+def get_teams(
+    include_leadership: Optional[bool] = None,
+    for_onboarding: bool = False,
+    user_role: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Fetches teams. Hides leadership teams from interns and public onboarding."""
+    query = db.query(models.Team)
+    
+    # Hide leadership teams for onboarding or intern roles
+    is_intern_role = user_role and user_role.lower() in [
+        "frontend_developer", "backend_developer", "devops_developer", "intern", "student", "user"
+    ]
+    if for_onboarding or include_leadership is False or is_intern_role:
+        query = query.filter(models.Team.is_leadership == False)
+        
+    teams = query.order_by(models.Team.is_leadership.asc(), models.Team.name.asc()).all()
     return [team_to_response(t, db) for t in teams]
 
 @router.get("/{team_id}")
@@ -38,10 +53,26 @@ def get_team(team_id: int, db: Session = Depends(get_db)):
     res["members"] = [schemas.UserResponse.model_validate(m) for m in members]
     return res
 
+def verify_team_editor(user_id: Optional[int], db: Session):
+    """Verifies that the user has permission to modify teams (Leadership except view-only)."""
+    if not user_id:
+        return  # Allow if no user_id context passed (e.g. initial setup), checked on frontend
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=403, detail="User not recognized.")
+    role = (user.role or "").lower()
+    # View-only roles cannot edit
+    if role in ["cdc", "mentor", "viewer", "cfo", "cmo"]:
+        raise HTTPException(status_code=403, detail="View-only reviewers cannot create or modify teams.")
+    # Must be leadership/admin
+    if role not in ["admin", "ceo", "cto", "coo"]:
+        raise HTTPException(status_code=403, detail="Only leadership administrators can manage teams.")
+
 @router.post("", response_model=schemas.TeamResponse)
 @router.post("/", response_model=schemas.TeamResponse)
-def create_team(team_data: schemas.TeamCreate, db: Session = Depends(get_db)):
+def create_team(team_data: schemas.TeamCreate, user_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Creates a new team / department."""
+    verify_team_editor(user_id, db)
     cleaned_name = team_data.name.strip()
     if not cleaned_name:
         raise HTTPException(status_code=400, detail="Team name cannot be empty")
@@ -61,6 +92,7 @@ def create_team(team_data: schemas.TeamCreate, db: Session = Depends(get_db)):
         description=team_data.description or "",
         lead_id=team_data.leadId,
         lead_name=lead_name,
+        is_leadership=bool(team_data.isLeadership),
         createdAt=int(time.time() * 1000)
     )
     db.add(new_team)
@@ -70,8 +102,9 @@ def create_team(team_data: schemas.TeamCreate, db: Session = Depends(get_db)):
     return team_to_response(new_team, db)
 
 @router.put("/{team_id}", response_model=schemas.TeamResponse)
-def update_team(team_id: int, team_update: schemas.TeamUpdate, db: Session = Depends(get_db)):
+def update_team(team_id: int, team_update: schemas.TeamUpdate, user_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Updates team details, and cascades name changes to all assigned users."""
+    verify_team_editor(user_id, db)
     db_team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not db_team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -92,6 +125,9 @@ def update_team(team_id: int, team_update: schemas.TeamUpdate, db: Session = Dep
     if team_update.description is not None:
         db_team.description = team_update.description
 
+    if team_update.isLeadership is not None:
+        db_team.is_leadership = team_update.isLeadership
+
     if team_update.leadId is not None:
         db_team.lead_id = team_update.leadId
         lead_user = db.query(models.User).filter(models.User.id == team_update.leadId).first()
@@ -104,8 +140,9 @@ def update_team(team_id: int, team_update: schemas.TeamUpdate, db: Session = Dep
     return team_to_response(db_team, db)
 
 @router.delete("/{team_id}")
-def delete_team(team_id: int, db: Session = Depends(get_db)):
+def delete_team(team_id: int, user_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Deletes a team and sets all assigned users to unassigned."""
+    verify_team_editor(user_id, db)
     db_team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not db_team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -117,4 +154,5 @@ def delete_team(team_id: int, db: Session = Depends(get_db)):
     db.delete(db_team)
     db.commit()
     return {"message": f"Team '{team_name}' deleted successfully", "id": team_id}
+
 

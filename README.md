@@ -281,7 +281,7 @@ To test the role-adaptive experience, the login screen (`/login`) provides **1-C
 | **Nishanth** | `coo` | Chief Operating Officer | Operations, MoM & Department Cadence |
 | **Dhanya** | `cfo` | Chief Financial Officer | Executive Review & Oversight |
 | **Anju Vaishnavi** | `cmo` | Chief Marketing Officer | Cross-Team Feed & Deliverables |
-| **Rahul Sharma** | `scrum_head` | Lead Scrum Head | Urgent Review Queue & Sprint Velocity |
+| **Scrum Head** | `scrum_head` | Lead Scrum Head | Urgent Review Queue & Sprint Velocity |
 | **Alex Carter** | `frontend_developer` | Frontend Developer Intern | Active Sprint Tasks & Today's Attendance |
 | **Priya Patel** | `backend_developer` | Backend Developer Intern | Active Sprint Tasks & Today's Attendance |
 | **David Kim** | `devops_developer` | DevOps Developer Intern | Active Sprint Tasks & Today's Attendance |
